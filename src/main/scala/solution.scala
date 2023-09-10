@@ -1,0 +1,5 @@
+object solution {
+  val gameOfThrones = ???;
+  // gameOfThrones.nextTurn(???)(???)
+}
+
