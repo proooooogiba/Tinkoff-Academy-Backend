@@ -32,19 +32,30 @@ trait CallDragon {
   }
 }
 
-final case class Targaryen(name: String, wealth: Wealth) extends GreatHouse with MakeWildFire with CallDragon {
-  def apply(name: String, targaryenMove: Wealth): Targaryen = Targaryen(name, targaryenMove)
+final case class Targaryen(name: String, wealth: Wealth)
+    extends GreatHouse
+    with MakeWildFire
+    with CallDragon {
+  def apply(name: String, targaryenMove: Wealth): Targaryen =
+    Targaryen(name, targaryenMove)
 }
 
-final case class Lannisters(name: String, wealth: Wealth) extends GreatHouse with MakeWildFire with BorrowMoney {
-  def apply(name: String, lannistersMove: Wealth): Lannisters = Lannisters(name, lannistersMove)
+final case class Lannisters(name: String, wealth: Wealth)
+    extends GreatHouse
+    with MakeWildFire
+    with BorrowMoney {
+  def apply(name: String, lannistersMove: Wealth): Lannisters =
+    Lannisters(name, lannistersMove)
 }
 
 class GameOfThrones(targaryen: Targaryen, lannisters: Lannisters) {
   private var moveNumber = 0
   def nextTurn(targaryenMove: Wealth)(lannistersMove: Wealth): GameOfThrones = {
     moveNumber += 1
-    new GameOfThrones(Targaryen(targaryen.name, targaryenMove), Lannisters(lannisters.name, lannistersMove))
+    new GameOfThrones(
+      Targaryen(targaryen.name, targaryenMove),
+      Lannisters(lannisters.name, lannistersMove)
+    )
   }
 }
 object wealthLanissters extends Wealth {
@@ -60,6 +71,8 @@ object wealthTargaryen extends Wealth {
 object solution extends App {
   private val tar = Targaryen("Таргариены", wealthTargaryen)
   private val lan = Lannisters("Ланистеры", wealthLanissters)
-  private var gameOfThrones: GameOfThrones = new GameOfThrones(tar, lan)
-  gameOfThrones = gameOfThrones.nextTurn(tar.callDragon)(lan.makeWildFire).nextTurn(tar.callDragon)(lan.borrowMoney)
+  private var gameOfThrones = new GameOfThrones(tar, lan)
+  gameOfThrones = gameOfThrones
+    .nextTurn(tar.callDragon)(lan.makeWildFire)
+    .nextTurn(tar.callDragon)(lan.borrowMoney)
 }
