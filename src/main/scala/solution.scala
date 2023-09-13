@@ -1,5 +1,3 @@
-import sun.util.resources.Bundles.Strategy
-
 trait GreatHouse {
   val name: String
   val wealth: Wealth
@@ -63,7 +61,5 @@ object solution extends App {
   private val tar = Targaryen("Таргариены", wealthTargaryen)
   private val lan = Lannisters("Ланистеры", wealthLanissters)
   private var gameOfThrones: GameOfThrones = new GameOfThrones(tar, lan)
-  gameOfThrones = gameOfThrones.nextTurn(tar.callDragon)(lan.makeWildFire)
-  gameOfThrones = gameOfThrones.nextTurn(tar.callDragon)(lan.borrowMoney)
+  gameOfThrones = gameOfThrones.nextTurn(tar.callDragon)(lan.makeWildFire).nextTurn(tar.callDragon)(lan.borrowMoney)
 }
-
