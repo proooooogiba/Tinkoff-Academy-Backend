@@ -137,14 +137,8 @@ object Statistics {
   private def writeStatsToFile(outputFileName: String, output: String): Either[Throwable, Unit] = {
     val file = new File(outputFileName)
     if (file.exists()) {
-      val source      = Source.fromFile(file)
-      val fileContent = source.mkString
-      if (fileContent == output) {
-        throw new Exception("Shouldn't rewrite file")
-      }
-      source.close()
+      throw new Exception("Shouldn't rewrite file")
     }
-
     val fileWriter = new FileWriter(file)
     fileWriter.write(output)
     fileWriter.close()
@@ -167,5 +161,5 @@ object Statistics {
 }
 
 object app extends App {
-  val statistics = Statistics.calculate("input_2.tsv", "output_2.tsv")
+  val statistics = Statistics.calculate("input_2.tsv", "output_existed_file.tsv")
 }
