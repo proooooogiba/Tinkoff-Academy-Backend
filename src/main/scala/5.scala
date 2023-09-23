@@ -4,17 +4,7 @@ case class Salary(employee: String, amount: Double)
 
 class RepeatListFromIterable[+T](iterable: Iterable[T]) extends RepeatList[T] {
   // should repeat iterable indefinitely
-  override def iterator: Iterator[T] = new Iterator[T] {
-    private var iter = iterable.iterator
-    override def hasNext: Boolean = true
-
-    override def next(): T = {
-      if (iter.isEmpty) {
-        iter = iterable.iterator
-      }
-      iter.next()
-    }
-  }
+  override def iterator: Iterator[T] = Iterator.continually(iterable).flatten
 }
 
 object RepeatList {
@@ -36,15 +26,15 @@ object MultiplyInstances {
     override def fourTimes(m: Salary): Salary = Salary(m.employee, m.amount * 4)
   }
 
-  implicit val multiplyRepeatList: Multiply[RepeatList[Int]] =
-    new Multiply[RepeatList[Int]] {
-      override def twice(m: RepeatList[Int]): RepeatList[Int] = RepeatList(
+  implicit def multiplyRepeatList[M]: Multiply[RepeatList[M]] =
+    new Multiply[RepeatList[M]] {
+      override def twice(m: RepeatList[M]): RepeatList[M] = RepeatList(
         m.view.flatMap(x => Iterable(x, x))
       )
-      override def thrice(m: RepeatList[Int]): RepeatList[Int] = RepeatList(
+      override def thrice(m: RepeatList[M]): RepeatList[M] = RepeatList(
         m.view.flatMap(x => Iterable(x, x, x))
       )
-      override def fourTimes(m: RepeatList[Int]): RepeatList[Int] = RepeatList(
+      override def fourTimes(m: RepeatList[M]): RepeatList[M] = RepeatList(
         m.view.flatMap(x => Iterable(x, x, x, x))
       )
     }

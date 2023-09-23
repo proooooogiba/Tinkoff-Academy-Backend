@@ -30,22 +30,18 @@ class HelloSlide[R <: WordLine](lines: Seq[R]) extends Slide[R] {
 object RedactedWordLineConverter extends Converter[RedactedWordLine] {
   override def convert(value: RedactedWordLine): String = if (
     Random.nextDouble() < value.redactionFactor
-  ) value.word.replaceAll(".*", "█")
+  ) value.word.replaceAll(".", "█")
   else value.word
 }
 
 object four extends App {
-  val wordLineSlideContent = List(
-    new WordLine("Hello"),
-    new WordLine("there!"),
-    new WordLine("I am using Scala 2!")
-  )
+  val listOfStrings = List("Hello", "there!", "I am using Scala 2!")
 
-  val redactedWordLineSlideContent = List(
-    new RedactedWordLine(0.3, "Hello"),
-    new RedactedWordLine(0.1, "there!"),
-    new RedactedWordLine(0.4, "I am using Scala 2!")
-  )
+  val wordLineSlideContent =
+    listOfStrings.map(s => new WordLine(s))
+
+  val redactedWordLineSlideContent =
+    listOfStrings.map(s => new RedactedWordLine(Random.nextDouble(), s))
 
   val redactedWordLineSlide =
     new HelloSlide[RedactedWordLine](redactedWordLineSlideContent)

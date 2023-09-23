@@ -1,5 +1,3 @@
-import scala.reflect.runtime.universe._
-
 class KnowNothing
 class Aggressive extends KnowNothing
 class KnowSomething extends KnowNothing
