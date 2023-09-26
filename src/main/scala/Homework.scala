@@ -11,7 +11,7 @@ object Homework {
 
     val matchPattern: String => Either[Exception, Int] = {
       case constPattern(i) => Right(i.toInt)
-      case _ => Left(new Exception)
+      case _               => Left(new Exception)
     }
 
     Using(Source.fromFile("file.txt")) { s =>
@@ -21,4 +21,3 @@ object Homework {
   }
 
 }
-
