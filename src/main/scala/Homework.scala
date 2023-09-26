@@ -1,9 +1,11 @@
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
+import scala.annotation.nowarn
 import scala.io.Source
 import scala.util.Using
 import scala.util.matching.Regex
 
+@nowarn
 object Homework {
 
   def main(args: Array[String]): Unit = {
