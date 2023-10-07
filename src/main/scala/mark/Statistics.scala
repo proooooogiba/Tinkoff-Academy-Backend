@@ -97,10 +97,9 @@ object Statistics {
       val students = (for {
         line <- source.getLines()
         listOfStudent = line.split("\t").toList
-        mark    <- listOfStudent.last.toIntOption
+        mark    <- listOfStudent.lastOption.flatMap(_.toIntOption)
         student <- if (listOfStudent.length == 2) Some(Student(listOfStudent.head, mark)) else None
       } yield student).toList
-      source.close()
       students
     }.toEither
   }
@@ -111,7 +110,6 @@ object Statistics {
     } else {
       Using(new FileWriter(file)) { fileWriter =>
         fileWriter.write(output)
-        fileWriter.close()
       }.toEither
     }
   }
