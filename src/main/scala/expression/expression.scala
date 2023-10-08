@@ -57,12 +57,13 @@ object Homework extends App {
   println(expr1.map(x => 1.8 * x))
   println(expr2.flatMap(x => Diff(Const(x - 1), Const(x + 1))))
 
-  val expr3: Expression[Int] = for {  println(expr3)
-
+  val expr3: Expression[Int] = for {
     a <- plus(const(1), const(2))
     b <- diff(const(a * 10), const(a))
     c <- mul(const(b), const(b + 1))
   } yield c
+
+  println(expr3)
 
   val m: Expression[Int] =
     Plus(Const(3), Div(Mul(Const(12), Diff(Const(7), Const(4))), Const(2)))
