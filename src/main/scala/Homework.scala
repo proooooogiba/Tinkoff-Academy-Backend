@@ -1,5 +1,6 @@
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
+import scala.annotation.tailrec
 
 sealed trait Expression
 case class Plus(a: Expression, b: Expression) extends Expression
@@ -20,7 +21,7 @@ trait Calculate[T] {
   def calculate(e: T): T
 }
 trait Serializable[T] {
-  def serializable(e: T): String
+  def serialize(e: T): String
 }
 
 trait Parseable[T] {
@@ -33,11 +34,17 @@ trait Printable[T] {
 
 object Homework extends App {
   object Serializable {
-    implicit val expressionSerializble: Serializable[Expression] = _.toString
+    implicit val expressionSerializble: Serializable[Expression] =
+      _.toString
+        .replaceAll("Plus", "+")
+        .replaceAll("Diff", "-")
+        .replaceAll("Div", "/")
+        .replaceAll("Mul", "*")
+        .replaceAll("Const\\((-?\\d+)\\)", "$1")
   }
 
   implicit class SerializableSyntax[T](val e: T) {
-    def show(implicit v: Serializable[T]): String = implicitly[Serializable[T]].serializable(e)
+    def show(implicit v: Serializable[T]): String = v.serialize(e)
   }
   object Calculatable {
     implicit val expressionCalculatable: Calculate[Expression] = new Calculate[Expression] {
@@ -59,12 +66,6 @@ object Homework extends App {
 
   object Parseable {
     def parse[T](e: String): Expression = {
-      var formattedExpression = e
-        .replaceAll("Plus", "+")
-        .replaceAll("Diff", "-")
-        .replaceAll("Div", "/")
-        .replaceAll("Mul", "*")
-        .replaceAll("Const\\((-?\\d+)\\)", "$1")
 
       def parseIterate(result: String): String = {
         import Homework.Calculatable.expressionCalculatable
@@ -88,24 +89,26 @@ object Homework extends App {
         )
       }
 
-      while (formattedExpression != parseIterate(formattedExpression)) {
-        formattedExpression = parseIterate(formattedExpression)
+      @tailrec
+      def recursiveParse(e: String): String = {
+        if (e != parseIterate(e)) {
+          recursiveParse(parseIterate(e))
+        } else {
+          e
+        }
       }
-      Const(formattedExpression.toIntOption.getOrElse(0)).asInstanceOf[Expression]
+
+      Const(recursiveParse(e).toIntOption.getOrElse(0)).asInstanceOf[Expression]
     }
 
-    implicit val expressionParseableConsole: Parseable[Expression] = (e: String) => {
-      parse(e)
-    }
-
-    implicit val expressionParseableFile: Parseable[Expression] = (e: String) => {
+    implicit val expressionParseable: Parseable[Expression] = (e: String) => {
       parse(e)
     }
   }
 
   object Printable {
     implicit val expressionPrintableConsole: Printable[Expression] = (e: Expression) => println(e)
-    implicit def expressionPrintableFile(implicit
+    implicit def expressionPrintableFile(
         outputFile: String = "file.txt"
     ): Printable[Expression] =
       (e: Expression) => {
@@ -120,8 +123,8 @@ object Homework extends App {
   def parse[A](e: String)(implicit p: Printable[A], v: Parseable[A]): Unit = p.print(v.parse(e))
 
   import Homework.Calculatable.expressionCalculatable
-  import Homework.Parseable.expressionParseableFile
-  import Homework.Printable.expressionPrintableFile
+  import Homework.Parseable.expressionParseable
+  import Homework.Printable.{expressionPrintableConsole, expressionPrintableFile}
   import Homework.Serializable.expressionSerializble
 
   val expr1: Expression = Plus(Const(3), Div(Mul(Const(12), Diff(Const(7), Const(4))), Const(2)))
@@ -129,6 +132,6 @@ object Homework extends App {
   val expr3: Expression = Plus(Const(5), Plus(Const(10), Const(-1)))
 
   print(expr1.calculate)(expressionPrintableFile(outputFile = "output.txt"))
-  parse(expr2.show)
+  parse(expr2.show)(expressionPrintableFile(), expressionParseable)
   print(expr3)
 }
