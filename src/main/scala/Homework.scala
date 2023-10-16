@@ -67,8 +67,7 @@ object Homework extends App {
   object Parseable {
     def parse[T](e: String): Expression = {
 
-      def parseIterate(result: String): String = {
-        import Homework.Calculatable.expressionCalculatable
+      def parseIterate(result: String)(implicit c: Calculate[Expression]): String = {
         val pattern = "(\\+|\\-|\\*|\\/)\\((-?\\d+),(-?\\d+)\\)".r
         pattern.replaceAllIn(
           result,
@@ -110,10 +109,9 @@ object Homework extends App {
     implicit val expressionPrintableConsole: Printable[Expression] = (e: Expression) => println(e)
     implicit def expressionPrintableFile(
         outputFile: String = "file.txt"
-    ): Printable[Expression] =
+    )(implicit s: Serializable[Expression]): Printable[Expression] =
       (e: Expression) => {
-        import Homework.Serializable.expressionSerializble
-        Files.write(Paths.get(outputFile), e.show.getBytes(StandardCharsets.UTF_8))
+        Files.write(Paths.get(outputFile), e.show(s).getBytes(StandardCharsets.UTF_8))
         ()
       }
   }
@@ -132,6 +130,6 @@ object Homework extends App {
   val expr3: Expression = Plus(Const(5), Plus(Const(10), Const(-1)))
 
   print(expr1.calculate)(expressionPrintableFile(outputFile = "output.txt"))
-  parse(expr2.show)(expressionPrintableFile(), expressionParseable)
+  parse(expr2.show)
   print(expr3)
 }
