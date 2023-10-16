@@ -65,9 +65,9 @@ object Homework extends App {
   }
 
   object Parseable {
-    def parse[T](e: String): Expression = {
+    def parse[T](e: String)(implicit c: Calculate[Expression]): Expression = {
 
-      def parseIterate(result: String)(implicit c: Calculate[Expression]): String = {
+      def parseIterate(result: String): String = {
         val pattern = "(\\+|\\-|\\*|\\/)\\((-?\\d+),(-?\\d+)\\)".r
         pattern.replaceAllIn(
           result,
@@ -100,6 +100,7 @@ object Homework extends App {
       Const(recursiveParse(e).toIntOption.getOrElse(0)).asInstanceOf[Expression]
     }
 
+    import Homework.Calculatable.expressionCalculatable
     implicit val expressionParseable: Parseable[Expression] = (e: String) => {
       parse(e)
     }
