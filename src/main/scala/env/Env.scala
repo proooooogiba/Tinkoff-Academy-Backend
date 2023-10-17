@@ -13,10 +13,12 @@ object Env {
   implicit class EnvMapSyntax(val self: Map[String, String]) extends AnyVal {
     def toEnv[F[_]]: Env[F] = (envName: String) => self.get(envName)
   }
-
-  def stub[F[_]]: Env[F] = (_: String) => Some("scala")
-
+  def stub[F[_]]: Env[F]   = (_: String) => implementStub.returnScala
   def system[F[_]]: Env[F] = (envName: String) => Try(sys.env(envName)).toOption
+}
+
+object implementStub {
+  def returnScala: Option[String] = Some("scala")
 }
 
 object main extends App {

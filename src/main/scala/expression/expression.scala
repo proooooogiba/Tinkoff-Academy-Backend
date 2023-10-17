@@ -1,11 +1,12 @@
 import Expression._
 import cats.Monad
 import cats.syntax.flatMap._
-import cats.syntax.functor._ // for flatMap
+import cats.syntax.functor._
+
+import scala.annotation.tailrec // for flatMap
 
 object Expression {
   sealed trait Expression[T]
-
   final case class Plus[T](a: Expression[T], b: Expression[T]) extends Expression[T]
 
   final case class Diff[T](a: Expression[T], b: Expression[T]) extends Expression[T]
@@ -39,11 +40,49 @@ object ExpressionInstances {
       }
     }
 
-    override def tailRecM[A, B](a: A)(f: A => Expression[Either[A, B]]): Expression[B] =
-      flatMap(f(a)) {
-        case Left(value)  => tailRecM(value)(f)
-        case Right(value) => Const(value)
-      }
+    override def tailRecM[A, B](a: A)(f: A => Expression[Either[A, B]]): Expression[B] = {
+      @tailrec
+      def loop(
+          open: List[Expression[Either[A, B]]],
+          closed: List[Option[Expression[B]]],
+          op: List[Option[String]]
+      ): List[Expression[B]] =
+        open match {
+          case Plus(left, right) :: next =>
+            loop(left :: right :: next, None :: closed, Some("+") :: op)
+
+          case Diff(left, right) :: next =>
+            loop(left :: right :: next, None :: closed, Some("-") :: op)
+
+          case Mul(left, right) :: next =>
+            loop(left :: right :: next, None :: closed, Some("*") :: op)
+
+          case Div(left, right) :: next =>
+            loop(left :: right :: next, None :: closed, Some("/") :: op)
+
+          case Const(Left(x)) :: next =>
+            loop(f(x) :: next, closed, op)
+          case Const(Right(x)) :: next =>
+            loop(next, Some(pure(x)) :: closed, None :: op)
+
+          case Nil =>
+            closed.zip(op).foldLeft(Nil: List[Expression[B]]) { (acc, tupleExpressionOp) =>
+              val (maybeExpression, op) = tupleExpressionOp
+              maybeExpression.map(_ :: acc).getOrElse {
+                val left :: right :: tail = acc
+                op match {
+                  case Some("+") => plus(left, right) :: tail
+                  case Some("-") => diff(left, right) :: tail
+                  case Some("*") => mul(left, right) :: tail
+                  case Some("/") => div(left, right) :: tail
+                  case _         => throw new IllegalArgumentException("Unsupported expression")
+                }
+              }
+            }
+        }
+
+      loop(List(f(a)), Nil, Nil).head
+    }
 
     override def pure[A](x: A): Expression[A] = Const(x)
   }
@@ -78,4 +117,5 @@ object Homework extends App {
   println(expressionMonad.pure(m).flatMap(func) == func(m))           // true
   println(m.flatMap(expressionMonad.pure) == m)                       // true
   println(m.flatMap(f).flatMap(g) == m.flatMap(x => f(x).flatMap(g))) // true
+
 }
