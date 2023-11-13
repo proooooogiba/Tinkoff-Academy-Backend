@@ -6,18 +6,7 @@ import cats.effect.std.Env
 import cats.effect.{ExitCode, IO, IOApp, Ref}
 import cats.instances.string._
 import ru.tinkoff.tictactoe.Cells.{Coordinate, State}
-import ru.tinkoff.tictactoe.model.Size
-
-object Cells {
-  final case class Coordinate(row: Int, col: Int)
-  case class Board(size: Int, positions: Map[Coordinate, State])
-
-  final case class State(player: Option[Player])
-}
-
-trait Player {
-  def nextPlayer(): Player
-}
+import ru.tinkoff.tictactoe.model.{Player, Size}
 
 object X extends Player {
   override def nextPlayer(): Player = O
@@ -28,34 +17,44 @@ object O extends Player {
   override def toString: String = "O"
 }
 
-final class TicTacToe(ref: Ref[IO, Map[Coordinate, State]]) {
+sealed trait Result
+case object Continue extends Result
+case object Draw extends Result
+case class Winner(player: Player) extends Result
 
-  def getState(coordinate: Coordinate): IO[Option[State]] =
-    ref.get.map(_.get(coordinate))
+object Cells {
+  final case class Coordinate(row: Int, col: Int)
+  case class Board(size: Int, positions: Map[Coordinate, State])
 
-  def makeTurn(coordinate: Coordinate, player: Player): IO[Option[State]] =
-    getState(coordinate).flatMap {
-      case Some(value) =>
-        value.player match {
-          case Some(_) => IO(None)
-          case None =>
-            ref.modify { allPositions =>
-              val mayBePosition = allPositions.get(coordinate).map { position =>
-                position.copy(player = Some(player))
-              }
-              val newPositions = allPositions ++ mayBePosition.map(m => (coordinate, m))
-              (newPositions, mayBePosition)
+  final case class State(player: Option[Player])
+}
+
+final class TicTacToe(ref: Ref[IO, Map[Coordinate, State]], size: Int) {
+
+  def getState(coordinate: Coordinate): IO[State] =
+    ref.get.map(_.getOrElse(coordinate, State(None)))
+
+  def makeTurn(coordinate: Coordinate, player: Player): IO[State] =
+    getState(coordinate).flatMap { state =>
+      state.player match {
+        case Some(_) => IO(State(None))
+        case None =>
+          ref.modify { allPositions =>
+            val mayBePosition = allPositions.get(coordinate).map { position =>
+              position.copy(player = Some(player))
             }
-        }
-      case None => IO(None)
+            val newPositions = allPositions ++ mayBePosition.map(m => (coordinate, m))
+            (newPositions, mayBePosition.get)
+          }
+      }
     }
 
   def printBoard: IO[Unit] = {
     def printCellState(state: State): String = state.player.map(_.toString).getOrElse("_")
     for {
       board <- ref.get
-      rows = (0 until 3).map { row =>
-        (0 until 3).map { col =>
+      rows = (0 until size).map { row =>
+        (0 until size).map { col =>
           val coordinate = Coordinate(row, col)
           printCellState(board.getOrElse(coordinate, State(None))) + " "
         }.mkString
@@ -77,12 +76,65 @@ final class TicTacToe(ref: Ref[IO, Map[Coordinate, State]]) {
     )
 
   private def checkNumber(num: Int): IO[Int] =
-    if (num > 3) IO.raiseError(new RuntimeException(s"Number should be less 3")) else IO(num)
+    if (num >= size) IO.raiseError(new RuntimeException(s"Number should be less $size"))
+    else IO(num)
 
   def getCoordinate: IO[Coordinate] = for {
     row <- readInt("row")
     col <- readInt("col")
   } yield Coordinate(row, col)
+
+  def checkResult: IO[Result] =
+    ref.get.map(gameMap =>
+      checkWinner(gameMap) match {
+        case None         => if (checkDraw(gameMap)) Draw else Continue
+        case Some(player) => Winner(player)
+      },
+    )
+
+  def checkDraw(gameMap: Map[Coordinate, State]): Boolean = !gameMap.values.exists(_.player.isEmpty)
+
+  def checkWinner(gameMap: Map[Coordinate, State]): Option[Player] = {
+    def checkRowWin(row: Int): Option[Player] = {
+      val states = (0 until size).map(col => gameMap.getOrElse(Coordinate(row, col), State(None)))
+      if (states.forall(_.player.isDefined) && states.map(_.player.get).toSet.size == 1) {
+        states.head.player
+      } else {
+        None
+      }
+    }
+
+    def checkColWin(col: Int): Option[Player] = {
+      val states = (0 until size).map(row => gameMap.getOrElse(Coordinate(row, col), State(None)))
+      if (states.forall(_.player.isDefined) && states.map(_.player.get).toSet.size == 1) {
+        states.head.player
+      } else {
+        None
+      }
+    }
+
+    def checkDiagonalWin(): Option[Player] = {
+      val mainDiagonalStates =
+        (0 until size).map(i => gameMap.getOrElse(Coordinate(i, i), State(None)))
+      val antiDiagonalStates =
+        (0 until size).map(i => gameMap.getOrElse(Coordinate(i, size - 1 - i), State(None)))
+
+      def checkDiagonal(states: Seq[State]): Option[Player] =
+        if (states.forall(_.player.isDefined) && states.map(_.player.get).toSet.size == 1) {
+          states.head.player
+        } else {
+          None
+        }
+
+      checkDiagonal(mainDiagonalStates).orElse(checkDiagonal(antiDiagonalStates))
+    }
+
+    (0 until size)
+      .flatMap(i => List(checkRowWin(i), checkColWin(i)))
+      .find(_.isDefined)
+      .flatten
+      .orElse(checkDiagonalWin())
+  }
 
 }
 
@@ -97,18 +149,30 @@ object Game extends IOApp {
 
     boardRef <- Ref.of[IO, Map[Coordinate, State]](positions)
 
-    game = new TicTacToe(boardRef)
-    _ <- game.printBoard
-    coordinate <- game.getCoordinate
-    _ <- game.makeTurn(coordinate, X)
-    _ <- game.printBoard
-    coordinate <- game.getCoordinate
-    _ <- game.makeTurn(coordinate, O)
-    _ <- game.printBoard
-
+    game = new TicTacToe(boardRef, size.value)
+    res <- runGame(game)
+    _ <- IO.println(s"$res")
   } yield ExitCode.Success
 
-//  def runGame(boardRef: Ref[IO, Board]): IO[Unit] =
+  def runGame(game: TicTacToe): IO[Result] = {
+
+    def iterationGame(player: Player): IO[Result] = {
+      val result = for {
+        coordinate <- game.getCoordinate
+        _ <- game.makeTurn(coordinate, player)
+        _ <- game.printBoard
+        res <- game.checkResult
+      } yield res
+
+      result.flatMap {
+        case Continue       => iterationGame(player.nextPlayer())
+        case Winner(player) => IO(Winner(player))
+        case Draw           => IO(Draw)
+      }
+    }
+
+    iterationGame(X)
+  }
 
   private def getSize[F[_]: Env: MonadThrow]: F[Size] =
     OptionT(Env[F].get("MAP_SIZE"))
@@ -120,4 +184,3 @@ object Game extends IOApp {
       .leftMap(new IllegalArgumentException(_))
       .rethrowT
 }
-
