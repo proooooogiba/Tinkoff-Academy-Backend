@@ -15,7 +15,8 @@ class GameController(game: Game) {
             IO.println(err) >> iterationGame(player)
           case Right(_) => IO(Continue)
         }
-        _ <- game.printBoard
+        boardString <- game.getBoardString
+        _ <- IO(println(boardString))
         res <- game.getGameState
       } yield res
 

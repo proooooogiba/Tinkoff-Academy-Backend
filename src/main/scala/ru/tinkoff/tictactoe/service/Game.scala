@@ -28,20 +28,6 @@ class Game(ref: Ref[IO, Map[Coordinate, State]], size: Int) {
       }
     } yield result
 
-  def printBoard: IO[Unit] = {
-    def printCellState(state: State): String = state.player.map(_.toString).getOrElse("_")
-    for {
-      board <- ref.get
-      rows = (0 until size).map { row =>
-        (0 until size).map { col =>
-          val coordinate = Coordinate(row, col)
-          printCellState(board.getOrElse(coordinate, State(None))) + " "
-        }.mkString
-      }
-      _ <- IO.println(rows.mkString("\n"))
-    } yield ()
-  }
-
   def getCoordinate: IO[Coordinate] = {
     val reader = new Reader(size)
     for {
@@ -52,4 +38,18 @@ class Game(ref: Ref[IO, Map[Coordinate, State]], size: Int) {
 
   def getGameState: IO[Result] =
     ref.get.flatMap(map => IO(GameStateChecker.getGameState(map, size)))
+
+  def getBoardString: IO[String] = {
+    def getCellChar(state: State): String = state.player.map(_.toString).getOrElse("_")
+    for {
+      board <- ref.get
+      rows = (0 until size).map { row =>
+        (0 until size).map { col =>
+          val coordinate = Coordinate(row, col)
+          getCellChar(board.getOrElse(coordinate, State(None))) + " "
+        }.mkString
+      }
+      result <- IO(rows.mkString("\n"))
+    } yield result
+  }
 }

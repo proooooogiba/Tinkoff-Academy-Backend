@@ -25,6 +25,7 @@ object Main extends IOApp {
     result <- controller.runGame().map {
       case Winner(player) => s"$player has won! Congratulations!"
       case Draw           => s"Draw! Friendship has won!"
+      case _ => IO.raiseError(new IllegalArgumentException(s"Error! Impossible result of game!"))
     }
     _ <- IO.println(result)
   } yield ExitCode.Success

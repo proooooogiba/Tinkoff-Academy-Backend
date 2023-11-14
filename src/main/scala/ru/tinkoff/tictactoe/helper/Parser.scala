@@ -10,7 +10,6 @@ class Parser(size: Int) {
       IO(println(err)) *> readInt(name),
     )
   } yield checkedNumber
-
   def parseInt(s: String): IO[Int] = IO
     .delay(s.toInt)
     .handleErrorWith(_ =>
