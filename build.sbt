@@ -12,6 +12,12 @@ val logbackVersion = "1.4.11"
 val tethysVersion = "0.26.0"
 val enumeratumVersion = "1.7.2"
 
+lazy val coverageSettings = Seq(
+  coverageMinimumStmtTotal := 50,
+  coverageMinimumBranchTotal := 50,
+  coverageFailOnMinimum := true,
+)
+
 lazy val root = (project in file("."))
   .settings(
     libraryDependencies ++= Seq(
@@ -44,6 +50,7 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
     ),
-    name := "pets-store",
+    name := "hw-6",
   )
+  .settings(coverageSettings)
   .enablePlugins(JavaAppPackaging)
