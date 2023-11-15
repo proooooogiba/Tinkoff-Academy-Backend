@@ -16,8 +16,10 @@ test:
   script:
     - sbt coverage test coverageReport
   artifacts:
-    paths:
-      - target/scala-*/scoverage-report/index.html
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: target/scala-*/coverage-report/cobertura.xml
 
 publish:
   stage: publish
