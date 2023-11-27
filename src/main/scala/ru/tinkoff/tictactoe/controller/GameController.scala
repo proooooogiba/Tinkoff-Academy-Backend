@@ -1,6 +1,8 @@
 package ru.tinkoff.tictactoe.controller
 
 import cats.effect.IO
+import ru.tinkoff.tictactoe.helper.Reader
+import ru.tinkoff.tictactoe.model.Cells.Coordinate
 import ru.tinkoff.tictactoe.model.{Continue, Draw, Player, Result, Winner, X}
 import ru.tinkoff.tictactoe.service.Game
 
@@ -8,7 +10,7 @@ class GameController(game: Game) {
   def runGame(): IO[Result] = {
     def iterationGame(player: Player): IO[Result] = {
       val result = for {
-        coordinate <- game.getCoordinate
+        coordinate <- getCoordinate
         result <- game.makeTurn(coordinate, player)
         _ <- result match {
           case Left(err) =>
@@ -28,5 +30,13 @@ class GameController(game: Game) {
     }
 
     iterationGame(X)
+  }
+
+  private def getCoordinate: IO[Coordinate] = {
+    val reader = new Reader(game.getSize)
+    for {
+      row <- reader.readInt("row")
+      col <- reader.readInt("col")
+    } yield Coordinate(row, col)
   }
 }

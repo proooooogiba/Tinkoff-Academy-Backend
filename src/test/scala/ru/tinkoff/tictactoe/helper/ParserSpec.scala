@@ -1,66 +1,71 @@
 package ru.tinkoff.tictactoe.helper
 
-import cats.effect.unsafe.implicits.global
+import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.EitherValues
-import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-class ParserSpec extends AnyFlatSpec with Matchers with EitherValues {
+class ParserSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with EitherValues {
 
-  "parseInt" should "return input number" in {
-    val input = "42"
-    val expected = 42
+  "parseInt" - {
+    "return input number" in {
+      val input = "42"
+      val expected = 42
 
-    val parser = new Parser(3)
-    val result = parser.parseInt(input).unsafeRunSync()
-    result shouldEqual expected
-  }
-
-  it should "handler error" in {
-    val input = "ss"
-    val parser = new Parser(3)
-    val result = intercept[NumberFormatException] {
-      parser.parseInt(input).unsafeRunSync()
+      val parser = new Parser(3)
+      val result = parser.parseInt(input)
+      result.asserting(_ shouldEqual expected)
     }
 
-    result.getMessage shouldBe "Invalid number, when parsing Int"
-    result.getClass shouldBe classOf[NumberFormatException]
-  }
+    "handler error" in {
+      val input = "ss"
+      val parser = new Parser(3)
+      val result = parser
+        .parseInt(input)
 
-  it should "handle errors with IO monad" in {
-    val input = "ss"
-    val parser = new Parser(3)
-    val result = parser.parseInt(input).attempt.unsafeRunSync()
-
-    result.isLeft shouldBe true
-  }
-
-  "checkNumberLessThanSize" should "return input number" in {
-    val input = 2
-    val expected = 2
-
-    val parser = new Parser(3)
-    val result = parser.checkNumberLessThanSize(input).unsafeRunSync()
-    result shouldEqual expected
-  }
-
-  it should "handler error" in {
-    val input = 3
-    val size = 3
-    val parser = new Parser(size)
-    val result = intercept[RuntimeException] {
-      parser.checkNumberLessThanSize(input).unsafeRunSync()
+      result
+        .assertThrowsWithMessage[NumberFormatException]("Invalid number, when parsing Int")
     }
 
-    result.getMessage shouldEqual s"Number should be less $size"
+    "handle errors with IO monad" in {
+      val input = "ss"
+      val parser = new Parser(3)
+      val result = parser.parseInt(input).attempt
+
+      result.asserting(_.isLeft shouldEqual true)
+    }
   }
 
-  it should "handle errors with IO monad" in {
-    val input = 3
-    val size = 3
-    val parser = new Parser(size)
-    val result = parser.checkNumberLessThanSize(input).attempt.unsafeRunSync()
+  "checkNumberValue" - {
+    "return input number" in {
+      val input = 2
+      val expected = 2
 
-    result.isLeft shouldBe true
+      val parser = new Parser(3)
+      val result = parser.checkNumberValue(input)
+      result.asserting(_ shouldEqual expected)
+    }
+
+    "handle big number error" in {
+      val input = 3
+      val size = 3
+      val parser = new Parser(size)
+
+      val result = parser.checkNumberValue(input)
+
+      result
+        .assertThrowsWithMessage[RuntimeException](s"Number should be less $size")
+    }
+
+    "handle negative number error" in {
+      val input = -1
+      val size = 3
+      val parser = new Parser(size)
+
+      val result = parser.checkNumberValue(input)
+
+      result
+        .assertThrowsWithMessage[RuntimeException](s"Number should not be negative")
+    }
   }
 }

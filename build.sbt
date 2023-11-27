@@ -11,6 +11,9 @@ val http4sVersion = "0.23.23"
 val logbackVersion = "1.4.11"
 val tethysVersion = "0.26.0"
 val enumeratumVersion = "1.7.2"
+val catsRetryVersion = "3.1.0"
+val catsEffectTesting = "1.5.0"
+val refinedVersion = "0.11.0"
 
 lazy val coverageSettings = Seq(
   coverageMinimumStmtTotal := 50,
@@ -24,6 +27,7 @@ lazy val root = (project in file("."))
       // cats
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.typelevel" %% "cats-effect" % catsEffect3,
+      "com.github.cb372" %% "cats-retry" % catsRetryVersion,
 
       // tapir
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
@@ -45,10 +49,14 @@ lazy val root = (project in file("."))
       // enumeratum
       "com.beachape" %% "enumeratum" % enumeratumVersion,
 
+      // refined
+      "eu.timepit" %% "refined" % refinedVersion,
+
       // test
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
+      "org.typelevel" %% "cats-effect-testing-scalatest" % catsEffectTesting % Test,
     ),
     name := "hw-6",
   )

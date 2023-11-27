@@ -40,5 +40,4 @@ class GameStateCheckerSpec extends AnyFlatSpec with Matchers with EitherValues w
       calculatedResult shouldBe expectedResult
     }
   }
-
 }
