@@ -1,0 +1,14 @@
+version: "3.3"
+
+networks:
+  net:
+    driver: bridge
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: news_aggregator
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5432:5432"
