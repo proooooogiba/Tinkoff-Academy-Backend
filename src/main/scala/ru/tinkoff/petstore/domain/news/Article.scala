@@ -13,7 +13,7 @@ case class Article(
     url: String,
     urlToImage: Option[String],
     publishedAt: String,
-    content: String,
+    content: Option[String],
 )
 
 object Article extends TethysInstances {
