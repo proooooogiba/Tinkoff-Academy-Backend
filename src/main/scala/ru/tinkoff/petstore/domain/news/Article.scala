@@ -7,11 +7,11 @@ import tethys.{JsonReader, JsonWriter}
 
 case class Article(
     source: NewsSource,
-    author: String,
+    author: Option[String],
     title: String,
-    description: String,
+    description: Option[String],
     url: String,
-    urlToImage: String,
+    urlToImage: Option[String],
     publishedAt: String,
     content: String,
 )

@@ -18,6 +18,12 @@ val testcontainersPostgresqlVersion = "0.40.12"
 val pureConfigVersion = "0.17.4"
 val quillVersion = "4.6.0"
 val ceTestingVersion = "1.5.0"
+val sttpClientVersion = "3.9.0"
+val catsBackendVersion = "3.8.13"
+val catsRetryVersion = "3.1.0"
+val catsLoggingVersion = "2.6.0"
+val ficusVersion = "1.5.2"
+val circeVersion = "0.14.5"
 
 lazy val root = (project in file("."))
   .settings(
@@ -38,13 +44,26 @@ lazy val root = (project in file("."))
       "ch.qos.logback" % "logback-classic" % logbackVersion,
 
       // sttp-client
-      "com.softwaremill.sttp.client3" %% "core" % "3.9.1",
+      "com.softwaremill.sttp.client3" %% "core" % sttpClientVersion,
+      "com.softwaremill.sttp.client3" %% "circe" % sttpClientVersion,
+      "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % catsBackendVersion,
+      "com.github.cb372" %% "cats-retry" % catsRetryVersion,
+      "org.typelevel" %% "log4cats-core" % catsLoggingVersion,
+      "org.typelevel" %% "log4cats-slf4j" % catsLoggingVersion,
+
+      // ficus
+      "com.iheart" %% "ficus" % ficusVersion,
 
       // tethys
       "com.tethys-json" %% "tethys-core" % tethysVersion,
       "com.tethys-json" %% "tethys-jackson" % tethysVersion,
       "com.tethys-json" %% "tethys-derivation" % tethysVersion,
       "com.tethys-json" %% "tethys-enumeratum" % tethysVersion,
+
+      // circe
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
 
       // enumeratum
       "com.beachape" %% "enumeratum" % enumeratumVersion,

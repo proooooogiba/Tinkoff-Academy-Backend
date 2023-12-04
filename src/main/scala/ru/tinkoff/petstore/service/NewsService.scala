@@ -2,7 +2,8 @@ package ru.tinkoff.petstore.service
 
 import cats.FlatMap
 import cats.effect.std.UUIDGen
-import ru.tinkoff.petstore.domain.news.NewsResponse
+import ru.tinkoff.petstore.api.news.model.response.NewsResponse
+import ru.tinkoff.petstore.api.service.RetryingNewsClient
 import ru.tinkoff.petstore.repository.NewsRepository
 
 trait NewsService[F[_]] {
@@ -13,14 +14,18 @@ trait NewsService[F[_]] {
   // сохранённые новости и их лента - тут как раз таки будет реализован CRUD - типо есть news, а есть my news
   // возможность поделиться новостями - сервак должен будет предоставлять ссылку на новость в json-формате
 
-  def searchByKeyWord(keyWord: String): F[Option[NewsResponse]]
+  def getByKeyWord(keyWord: String): F[Option[NewsResponse]]
+
+  def getHeadlinesByCategory(category: Category): F[Option[NewsResponse]]
 }
 
 object NewsService {
 
-  private class Impl[F[_]](newsRepository: NewsRepository[F]) extends NewsService[F] {
-    override def searchByKeyWord(keyWord: String): F[Option[NewsResponse]] =
-      ???
+  private class Impl[F[_]](newsRepository: NewsRepository[F], newsClient: RetryingNewsClient[F])
+      extends NewsService[F] {
+    override def getByKeyWord(keyWord: String): F[Option[NewsResponse]] =
+      newsClient.getByKeyWord(keyWord)
+
     //    Option(System.getenv(NewsApiKeyEnv)) match {
 //      case Some(apiKey) =>
 //        val client = NewsApiClient(apiKey)
@@ -60,7 +65,9 @@ object NewsService {
 //  def make[F[_]: UUIDGen: FlatMap: Clock](orderRepository: OrderRepository[F]): OrderService[F] =
 //    new Impl[F](orderRepository)
 
-  def make[F[_]: UUIDGen: FlatMap](newsRepository: NewsRepository[F]): NewsService[F] =
-//    val client = NewsApiClient("<NEWS_API_KEY>")
-    new Impl[F](newsRepository)
+  def make[F[_]: UUIDGen: FlatMap](
+      newsRepository: NewsRepository[F],
+      newsClient: RetryingNewsClient[F],
+  ): NewsService[F] =
+    new Impl[F](newsRepository, newsClient)
 }
