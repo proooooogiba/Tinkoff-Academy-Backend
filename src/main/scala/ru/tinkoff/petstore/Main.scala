@@ -8,15 +8,21 @@ import org.http4s.server.Router
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import ru.tinkoff.petstore.config.AppConfig
-import ru.tinkoff.petstore.controller.{ExampleController, OrderController, PetController}
+import ru.tinkoff.petstore.controller.{
+  ExampleController,
+  NewsController,
+  OrderController,
+  PetController,
+}
 import ru.tinkoff.petstore.database.FlywayMigration
 import ru.tinkoff.petstore.database.transactor.makeTransactor
 import ru.tinkoff.petstore.repository.postgresql.{
+  NewsRepositoryPostgresql,
   OrderRepositoryPostgresql,
   PetsRepositoryPostgresql,
 }
-import ru.tinkoff.petstore.repository.{OrderRepository, PetRepository}
-import ru.tinkoff.petstore.service.{OrderService, PetService}
+import ru.tinkoff.petstore.repository.{NewsRepository, OrderRepository, PetRepository}
+import ru.tinkoff.petstore.service.{NewsService, OrderService, PetService}
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
@@ -28,6 +34,7 @@ object Main extends IOApp.Simple {
     makeTransactor[IO](conf.database).use { implicit xa: Transactor[IO] =>
       val orderRepo: OrderRepository[IO] = new OrderRepositoryPostgresql[IO]
       val petRepo: PetRepository[IO] = new PetsRepositoryPostgresql[IO]
+      val newsRepo: NewsRepository[IO] = new NewsRepositoryPostgresql[IO]
 
       for {
         _ <- FlywayMigration.migrate[IO](conf.database)
@@ -37,6 +44,7 @@ object Main extends IOApp.Simple {
             ExampleController.make[IO],
             OrderController.make(OrderService.make(orderRepo)),
             PetController.make(PetService.make(petRepo)),
+            NewsController.make(NewsService.make(newsRepo)),
           ).flatMap(_.endpoints)
         }
 

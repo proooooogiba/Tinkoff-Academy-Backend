@@ -5,7 +5,6 @@ import sttp.tapir.Schema
 import tethys.derivation.semiauto._
 import tethys.{JsonReader, JsonWriter}
 
-import java.time.Instant
 import java.util.UUID
 
 case class CreateOrder(petId: UUID)

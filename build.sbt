@@ -37,6 +37,9 @@ lazy val root = (project in file("."))
       // logback
       "ch.qos.logback" % "logback-classic" % logbackVersion,
 
+      // sttp-client
+      "com.softwaremill.sttp.client3" %% "core" % "3.9.1",
+
       // tethys
       "com.tethys-json" %% "tethys-core" % tethysVersion,
       "com.tethys-json" %% "tethys-jackson" % tethysVersion,
