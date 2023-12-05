@@ -1,15 +1,13 @@
 package ru.tinkoff.petstore.repository
 
-import ru.tinkoff.petstore.domain.order.Order
-
-import java.util.UUID
+import ru.tinkoff.petstore.domain.news.News
 
 trait NewsRepository[F[_]] {
-  def create(order: Order): F[Long]
+  def create(createNews: News): F[Long]
 
-  def list: F[List[Order]]
-
-  def get(id: UUID): F[Option[Order]]
-
-  def delete(id: UUID): F[Option[Order]]
+//  def list: F[List[News]]
+//
+//  def get(id: UUID): F[Option[News]]
+//
+//  def delete(id: UUID): F[Option[News]]
 }

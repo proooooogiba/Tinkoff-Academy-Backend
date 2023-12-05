@@ -5,14 +5,14 @@ import cats.implicits.toFlatMapOps
 import io.circe.generic.auto.exportDecoder
 import ru.tinkoff.petstore.api.commons.SttpResponseUtils
 import ru.tinkoff.petstore.api.news.model.configuration.NewsClientConfiguration
-import ru.tinkoff.petstore.api.news.model.response.NewsResponse
+import ru.tinkoff.petstore.domain.news.response.NewsAPIResponse
 import ru.tinkoff.petstore.domain.news.{NewsCategory, NewsCountry}
 import sttp.client3.{SttpBackend, UriContext, basicRequest}
 
 trait NewsClient[F[_]] {
-  def getByKeyWord(keyWord: String): F[Option[NewsResponse]]
-  def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsResponse]]
-  def getHeadlinesByCountry(countryCode: NewsCountry): F[Option[NewsResponse]]
+  def getByKeyWord(keyWord: String): F[Option[NewsAPIResponse]]
+  def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsAPIResponse]]
+  def getHeadlinesByCountry(countryCode: NewsCountry): F[Option[NewsAPIResponse]]
 }
 
 class HttpNewsClient[F[_]: Async](
@@ -20,38 +20,37 @@ class HttpNewsClient[F[_]: Async](
     newsClientConfiguration: NewsClientConfiguration,
 ) extends NewsClient[F] {
 
-  override def getByKeyWord(keyWord: String): F[Option[NewsResponse]] = {
+  override def getByKeyWord(keyWord: String): F[Option[NewsAPIResponse]] = {
     val getByKeyWordUrl =
       uri"${newsClientConfiguration.url}/everything?q=$keyWord&apiKey=${newsClientConfiguration.key}"
 
     basicRequest
       .get(getByKeyWordUrl)
-      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsResponse]])
+      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsAPIResponse]])
       .readTimeout(newsClientConfiguration.timeout)
       .send(sttpBackend)
       .flatMap(_.body)
   }
 
-  override def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsResponse]] = {
+  override def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsAPIResponse]] = {
     val getHeadlinesByCategoryUrl =
       uri"${newsClientConfiguration.url}/top-headlines?category=$category&apiKey=${newsClientConfiguration.key}"
 
     basicRequest
       .get(getHeadlinesByCategoryUrl)
-      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsResponse]])
+      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsAPIResponse]])
       .readTimeout(newsClientConfiguration.timeout)
       .send(sttpBackend)
       .flatMap(_.body)
   }
 
-  override def getHeadlinesByCountry(countryCode: NewsCountry): F[Option[NewsResponse]] = {
+  override def getHeadlinesByCountry(countryCode: NewsCountry): F[Option[NewsAPIResponse]] = {
     val getHeadlinesByCountryUrl =
       uri"${newsClientConfiguration.url}/top-headlines?country=${countryCode.entryName}&apiKey=${newsClientConfiguration.key}"
 
-    println(getHeadlinesByCountryUrl)
     basicRequest
       .get(getHeadlinesByCountryUrl)
-      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsResponse]])
+      .response(SttpResponseUtils.unwrapResponse[F, Option[NewsAPIResponse]])
       .readTimeout(newsClientConfiguration.timeout)
       .send(sttpBackend)
       .flatMap(_.body)

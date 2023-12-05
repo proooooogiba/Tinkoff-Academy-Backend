@@ -1,20 +1,31 @@
-package ru.tinkoff.petstore.api.news.model.response
+package ru.tinkoff.petstore.domain.news
 
 import ru.tinkoff.petstore.common.tethys.TethysInstances
-import ru.tinkoff.petstore.domain.news.Article
 import sttp.tapir.Schema
 import tethys.derivation.semiauto._
 import tethys.{JsonReader, JsonWriter}
-final case class NewsResponse(
-    status: String,
-    totalResults: Int,
-    articles: List[Article],
+
+import java.time.ZonedDateTime
+import java.util.UUID
+
+case class NewsResponse(
+    id: UUID,
+    source_id: Option[String],
+    source_name: String,
+    author: Option[String],
+    title: String,
+    description: Option[String],
+    url: String,
+    urlToImage: Option[String],
+    publishedAt: ZonedDateTime,
+    content: Option[String],
 )
+
 object NewsResponse extends TethysInstances {
   implicit val newsResponseReader: JsonReader[NewsResponse] = jsonReader
 
   implicit val newsResponseWriter: JsonWriter[NewsResponse] = jsonWriter
 
   implicit val newsResponseSchema: Schema[NewsResponse] = Schema.derived
-    .description("Список статей по ключевому слову")
+    .description("Новость")
 }
