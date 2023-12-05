@@ -10,17 +10,25 @@ import ru.tinkoff.petstore.domain.news.response.NewsAPIResponse
 import ru.tinkoff.petstore.domain.news.{News, NewsCategory, NewsCountry, NewsResponse}
 import ru.tinkoff.petstore.repository.NewsRepository
 
+import java.util.UUID
+
 trait NewsService[F[_]] {
   def getByKeyWord(keyWord: String): F[Option[NewsAPIResponse]]
 
   def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsAPIResponse]]
 
   def getHeadlinesByCountry(country: NewsCountry): F[Option[NewsAPIResponse]]
+
   def create(createNews: CreateNewsRequest): F[NewsResponse]
+
+  def list: F[List[NewsResponse]]
+
+  def get(id: UUID): F[Option[NewsResponse]]
+
+  def delete(id: UUID): F[Option[NewsResponse]]
 }
 
 object NewsService {
-
   private class Impl[F[_]: UUIDGen: FlatMap](
       newsRepository: NewsRepository[F],
       newsClient: RetryingNewsClient[F],
@@ -41,11 +49,19 @@ object NewsService {
         _ <- newsRepository.create(news)
       } yield news.toResponse
 
-//    override def list: F[List[News]] = ???
-//
-//    override def get(id: UUID): F[Option[News]] = ???
-//
-//    override def delete(id: UUID): F[Option[News]] = ???
+    override def list: F[List[NewsResponse]] =
+      newsRepository.list
+        .map(_.map(_.toResponse))
+
+    override def get(id: UUID): F[Option[NewsResponse]] =
+      newsRepository
+        .get(id)
+        .map(_.map(_.toResponse))
+
+    override def delete(id: UUID): F[Option[NewsResponse]] =
+      newsRepository
+        .delete(id)
+        .map(_.map(_.toResponse))
 
   }
 

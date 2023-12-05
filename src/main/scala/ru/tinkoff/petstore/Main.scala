@@ -1,6 +1,7 @@
 package ru.tinkoff.petstore
 
 import cats.effect.{IO, IOApp}
+import cats.implicits._
 import com.comcast.ip4s.{Host, Port}
 import doobie.Transactor
 import org.asynchttpclient.DefaultAsyncHttpClient
@@ -13,19 +14,10 @@ import ru.tinkoff.petstore.api.commons.RetryUtilsImpl
 import ru.tinkoff.petstore.api.news.HttpNewsClient
 import ru.tinkoff.petstore.api.service.RetryingNewsClient
 import ru.tinkoff.petstore.config.AppConfig
-import ru.tinkoff.petstore.controller.{
-  ExampleController,
-  NewsController,
-  OrderController,
-  PetController,
-}
+import ru.tinkoff.petstore.controller.{ExampleController, NewsController, OrderController, PetController}
 import ru.tinkoff.petstore.database.FlywayMigration
 import ru.tinkoff.petstore.database.transactor.makeTransactor
-import ru.tinkoff.petstore.repository.postgresql.{
-  NewsRepositoryPostgresql,
-  OrderRepositoryPostgresql,
-  PetsRepositoryPostgresql,
-}
+import ru.tinkoff.petstore.repository.postgresql.{NewsRepositoryPostgresql, OrderRepositoryPostgresql, PetsRepositoryPostgresql}
 import ru.tinkoff.petstore.repository.{NewsRepository, OrderRepository, PetRepository}
 import ru.tinkoff.petstore.service.{NewsService, OrderService, PetService}
 import sttp.client3.SttpBackend
