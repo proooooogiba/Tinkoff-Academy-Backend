@@ -14,7 +14,8 @@ import ru.tinkoff.newsaggregator.api.commons.RetryUtilsImpl
 import ru.tinkoff.newsaggregator.api.client.http.HttpNewsClient
 import ru.tinkoff.newsaggregator.api.client.retrying.RetryingNewsClient
 import ru.tinkoff.newsaggregator.config.AppConfig
-import ru.tinkoff.newsaggregator.controller.{ExampleController, NewsController, OrderController, PetController}
+import ru.tinkoff.newsaggregator.controller.news.NewsController
+import ru.tinkoff.newsaggregator.controller.{ExampleController, OrderController, PetController}
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
 import ru.tinkoff.newsaggregator.repository.postgresql.{NewsRepositoryPostgresql, OrderRepositoryPostgresql, PetsRepositoryPostgresql}

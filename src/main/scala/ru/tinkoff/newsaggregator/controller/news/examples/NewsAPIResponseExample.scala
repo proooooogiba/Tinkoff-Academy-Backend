@@ -1,6 +1,7 @@
-package ru.tinkoff.newsaggregator.domain.news.response
+package ru.tinkoff.newsaggregator.controller.news.examples
 
 import ru.tinkoff.newsaggregator.domain.news.NewsSource
+import ru.tinkoff.newsaggregator.domain.news.response.{ArticleAPIResponse, NewsAPIResponse}
 
 import java.time.ZonedDateTime
 

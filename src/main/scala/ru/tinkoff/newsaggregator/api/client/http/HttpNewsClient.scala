@@ -1,10 +1,11 @@
 package ru.tinkoff.newsaggregator.api.client.http
 
+import cats.Applicative
 import cats.effect.kernel.Async
 import cats.implicits.toFlatMapOps
 import io.circe.generic.auto.exportDecoder
-import ru.tinkoff.newsaggregator.api.commons.SttpResponseUtils
 import ru.tinkoff.newsaggregator.api.client.NewsClient
+import ru.tinkoff.newsaggregator.api.commons.SttpResponseUtils
 import ru.tinkoff.newsaggregator.config.newsclient.NewsClientConfiguration
 import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
 import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry}
@@ -24,7 +25,13 @@ class HttpNewsClient[F[_]: Async](
       .response(SttpResponseUtils.unwrapResponse[F, Option[NewsAPIResponse]])
       .readTimeout(newsClientConfiguration.timeout)
       .send(sttpBackend)
-      .flatMap(_.body)
+      .flatMap(response =>
+        if (response.isSuccess) {
+          response.body
+        } else {
+          Applicative[F].pure(None)
+        },
+      )
   }
 
   override def getHeadlinesByCategory(category: NewsCategory): F[Option[NewsAPIResponse]] = {
