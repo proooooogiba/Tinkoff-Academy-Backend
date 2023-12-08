@@ -6,7 +6,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 object NewsDBResponseExample {
-  val okDBExample = List(
+  val okDBExample: List[NewsResponse] = List(
     NewsResponse(
       UUID.randomUUID(),
       Some("business-insider"),
@@ -41,4 +41,3 @@ object NewsDBResponseExample {
     ),
   )
 }
-

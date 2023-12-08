@@ -1,4 +1,4 @@
-package ru.tinkoff.newsaggregator.pets
+package ru.tinkoff.newsaggregator.repository
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funsuite.AnyFunSuite

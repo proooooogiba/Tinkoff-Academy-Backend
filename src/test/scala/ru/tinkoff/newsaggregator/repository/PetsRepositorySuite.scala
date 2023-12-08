@@ -1,14 +1,8 @@
-package ru.tinkoff.newsaggregator.pets
+package ru.tinkoff.newsaggregator.repository
 
-import cats.effect.IO
-import cats.effect.std.UUIDGen
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import ru.tinkoff.newsaggregator.domain.pet.{Pet, PetCategory}
-import ru.tinkoff.newsaggregator.repository.inmemory.PetRepositoryInMemory
-
-import java.util.UUID
 
 // Test with F[_]
 class PetsRepositorySuite extends AnyFunSuite with Matchers with MockFactory {

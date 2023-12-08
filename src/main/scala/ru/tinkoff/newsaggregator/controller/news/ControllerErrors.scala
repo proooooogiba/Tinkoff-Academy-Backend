@@ -65,4 +65,8 @@ object ControllerErrors {
   val resourceNotFoundDel: ResourceNotFound = ResourceNotFound(
     "Новость не удалена: новости с данным uuid не существует",
   )
+
+  val resourceNotFoundByKeyWord: ResourceNotFound = ResourceNotFound(
+    "Новость по ключевому слову не были найдены",
+  )
 }

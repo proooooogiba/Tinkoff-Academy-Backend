@@ -1,19 +1,13 @@
-package ru.tinkoff.newsaggregator.pets
+package ru.tinkoff.newsaggregator.repository
 
-import cats.implicits.catsSyntaxOptionId
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import ru.tinkoff.newsaggregator.domain.order.Order
-import ru.tinkoff.newsaggregator.repository.inmemory.OrderRepositoryInMemory
 
-import java.time.Instant
-import java.util.UUID
-
-// FlatSpec testing style
-class OrderRepositorySpec extends AnyFlatSpec with Matchers {
+class NewsRepositorySpec extends AnyFlatSpec with Matchers with MockFactory {
 
 //  "OrderRepository" should "store orders" in {
-//    val repository = OrderRepositoryInMemory()
+//    val repository = NewsRepositoryInMemory()
 //    val order = Order(UUID.randomUUID(), 1, Instant.now())
 //    val createdOrder = repository.create(order)
 //

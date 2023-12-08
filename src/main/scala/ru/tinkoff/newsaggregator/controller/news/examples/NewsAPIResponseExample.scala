@@ -6,7 +6,7 @@ import ru.tinkoff.newsaggregator.domain.news.response.{ArticleAPIResponse, NewsA
 import java.time.ZonedDateTime
 
 object NewsAPIResponseExample {
-  val okAPIExample = NewsAPIResponse(
+  val okAPIExample: NewsAPIResponse = NewsAPIResponse(
     "ok",
     10401,
     List(
@@ -45,5 +45,11 @@ object NewsAPIResponseExample {
         ),
       ),
     ),
+  )
+
+  val notFoundAPIExample: NewsAPIResponse = NewsAPIResponse(
+    status = "ok",
+    totalResults = 0,
+    articles = List.empty,
   )
 }

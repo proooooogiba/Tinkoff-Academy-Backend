@@ -12,3 +12,4 @@ __pycache__
 project/.metals
 project/metals.sbt
 .bsp
+application.conf

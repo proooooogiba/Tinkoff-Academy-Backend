@@ -1,7 +1,7 @@
 package ru.tinkoff.newsaggregator.controller.news
 
-import cats.Monad
-import cats.Monad.ops.toAllMonadOps
+import cats.Applicative
+import cats.implicits.toFunctorOps
 import ru.tinkoff.newsaggregator.common.controller.Controller
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
 import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{
@@ -10,10 +10,12 @@ import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExamp
 }
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.okAPIExample
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsDBResponseExample.okDBExample
+import ru.tinkoff.newsaggregator.domain.news.NewsCategory.Science
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
 import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
 import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry, NewsResponse}
 import ru.tinkoff.newsaggregator.service.NewsService
+import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.model.StatusCode.{NotFound, Ok}
 import sttp.tapir._
 import sttp.tapir.generic.auto.schemaForCaseClass
@@ -25,7 +27,7 @@ import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
 import java.time.{LocalDate, ZoneId}
 import java.util.UUID
 
-class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controller[F] {
+class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Controller[F] {
 
   val getNewsByKeyWord: ServerEndpoint[Any, F] =
     endpoint.get
@@ -68,7 +70,12 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
   val getHeadlinesByCategory: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить самые популярные новости по категории")
-      .in("api" / "v1" / "news-api" / "category" / path[NewsCategory]("category"))
+      .in(
+        "api" / "v1" / "news-api" / "category" /
+          path[NewsCategory]("category")
+            .description("Категория поиска новостей")
+            .example(Science),
+      )
       .out(
         statusCode(Ok).and(
           jsonBody[NewsAPIResponse]
@@ -94,7 +101,12 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
   val getHeadlinesByCountry: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить самый популярные новости по странам")
-      .in("api" / "v1" / "news-api" / "country" / path[NewsCountry]("country"))
+      .in(
+        "api" / "v1" / "news-api" / "country" /
+          path[NewsCountry]("country")
+            .description("Cтрана поиска новостей")
+            .example(ru),
+      )
       .out(
         statusCode(Ok).and(
           jsonBody[NewsAPIResponse]
@@ -135,7 +147,7 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
       )
       .serverLogicSuccess(newsService.create)
 
-  val listNews: ServerEndpoint[Any, F] =
+  val allNews: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Список добавленных новостей")
       .in("api" / "v1" / "db" / "all")
@@ -163,7 +175,7 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
         }
       }
 
-  val getNews: ServerEndpoint[Any, F] =
+  val getNewsById: ServerEndpoint[Any, F] =
     endpoint.get
       .summary("Получить новость по uuid")
       .in("api" / "v1" / "db" / "get" / path[UUID]("newsID"))
@@ -221,14 +233,26 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
     endpoint.get
       .summary("Найти по ключевым статьям")
       .in("api" / "v1" / "db" / "keyWord" / path[String]("keyWord"))
-      .out(jsonBody[List[NewsResponse]])
-      .errorOut(statusCode.and(jsonBody[String]))
+      .out(
+        statusCode(Ok).and(
+          jsonBody[List[NewsResponse]]
+            .description("Новости по ключевому слову были успешной найдены")
+            .example(List(newsResponseExample)),
+        ),
+      )
+      .errorOut(
+        statusCode(NotFound).and(
+          jsonBody[ResourceNotFound]
+            .description("Новости по ключевому слову не были найдены")
+            .example(resourceNotFoundByKeyWord),
+        ),
+      )
       .serverLogic { keyWord =>
         newsService
           .getByKeyWordFromDB(keyWord)
           .map { list =>
             if (list.isEmpty) {
-              Left((NotFound, s"Сохранённые новости по ключевому слову $keyWord не найдены"))
+              Left(resourceNotFoundByKeyWord)
             } else {
               Right(list)
             }
@@ -271,7 +295,7 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
             if (list.isEmpty) {
               Left(
                 ResourceNotFound(
-                  "Сохранённые новости в этом диапазоне не найдены",
+                  "Сохранённые новости в данном диапазоне не найдены",
                 ),
               )
             } else {
@@ -280,14 +304,14 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
           }
       }
 
-  override def endpoints: List[ServerEndpoint[Any, F]] =
+  override val endpoints: List[ServerEndpoint[Any, F]] =
     List(
       getNewsByKeyWord,
       getHeadlinesByCategory,
       getHeadlinesByCountry,
       createNews,
-      listNews,
-      getNews,
+      allNews,
+      getNewsById,
       deleteNews,
       getByKeyWordFromDB,
       getNewsByPublishedRange,
@@ -296,6 +320,6 @@ class NewsController[F[_]: Monad](newsService: NewsService[F]) extends Controlle
 }
 
 object NewsController {
-  def make[F[_]: Monad](newsService: NewsService[F]): NewsController[F] =
+  def make[F[_]: Applicative](newsService: NewsService[F]): NewsController[F] =
     new NewsController[F](newsService)
 }

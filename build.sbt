@@ -24,6 +24,7 @@ val catsRetryVersion = "3.1.0"
 val catsLoggingVersion = "2.6.0"
 val ficusVersion = "1.5.2"
 val circeVersion = "0.14.5"
+val wireVersion = "2.5.8"
 
 lazy val root = (project in file("."))
   .settings(
@@ -84,6 +85,10 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
+      "com.softwaremill.macwire" %% "macros" % wireVersion % Provided,
+      "com.softwaremill.macwire" %% "util" % wireVersion,
+      "com.softwaremill.macwire" %% "proxy" % wireVersion,
+      "org.scalatestplus" %% "mockito-4-11" % "3.2.17.0" % Test,
 
       // integration test
       "org.typelevel" %% "cats-effect-testing-scalatest" % ceTestingVersion % IntegrationTest,
