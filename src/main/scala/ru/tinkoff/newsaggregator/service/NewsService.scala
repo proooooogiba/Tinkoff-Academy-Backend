@@ -6,8 +6,8 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import ru.tinkoff.newsaggregator.api.client.retrying.RetryingNewsClient
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
-import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
-import ru.tinkoff.newsaggregator.domain.news.{News, NewsCategory, NewsCountry, NewsResponse}
+import ru.tinkoff.newsaggregator.domain.news.response.{NewsAPIResponse, NewsResponse}
+import ru.tinkoff.newsaggregator.domain.news.{News, NewsCategory, NewsCountry}
 import ru.tinkoff.newsaggregator.repository.NewsRepository
 
 import java.time.ZonedDateTime

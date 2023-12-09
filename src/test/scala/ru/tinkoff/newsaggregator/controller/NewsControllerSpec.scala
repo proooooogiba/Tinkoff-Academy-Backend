@@ -16,15 +16,22 @@ import ru.tinkoff.newsaggregator.controller.news.ControllerErrors.{
   resourceNotFoundGet,
 }
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.{
+  errorAPIExample,
   notFoundAPIExample,
   okAPIExample,
 }
-import ru.tinkoff.newsaggregator.controller.news.{NewsController, ResourceNotFound, ServerError}
+import ru.tinkoff.newsaggregator.controller.news.{
+  NewsController,
+  ResourceNotFound,
+  ServerError,
+  UserBadRequest,
+}
 import ru.tinkoff.newsaggregator.domain.news.News
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory.{Business, Technology}
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{SttpBackend, UriContext, basicRequest}
+import sttp.model.StatusCode
 import sttp.model.StatusCode.{InternalServerError, NotFound, Ok}
 import sttp.tapir.integ.cats.effect.CatsMonadError
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -250,7 +257,6 @@ class NewsControllerSpec
     }
 
     "getByPublishedRange" - {
-
       val start = LocalDate.parse("2023-11-10")
       val end = LocalDate.parse("2023-12-12")
       val zStart = start.atStartOfDay(ZoneId.systemDefault())
@@ -302,7 +308,39 @@ class NewsControllerSpec
           _ <- response.asserting(_.body.isLeft shouldBe true)
           _ <- response.asserting(
             _.body shouldBe Left(
-              ResourceNotFound("Сохранённые новости в данном диапазоне не найдены").asJson,
+              Right(
+                ResourceNotFound("Сохранённые новости в данном диапазоне не найдены"),
+              ).asJson,
+            ),
+          )
+        } yield ()
+      }
+
+      "return error, because start date after end date" in {
+        val mockService = mock[NewsService[IO]]
+
+        val backendStub: SttpBackend[IO, Any] =
+          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+            .whenServerEndpointRunLogic(
+              NewsController.make[IO](mockService).getNewsByPublishedRange,
+            )
+            .backend()
+
+        val start = LocalDate.parse("2023-12-15")
+        val end = LocalDate.parse("2023-12-12")
+
+        val response = basicRequest
+          .get(uri"http://localhost:8080/api/v1/db/dateRange/$start/$end")
+          .send(backendStub)
+
+        for {
+          _ <- response.asserting(_.code shouldBe StatusCode(400))
+          _ <- response.asserting(_.body.isLeft shouldBe true)
+          _ <- response.asserting(
+            _.body shouldBe Left(
+              Right(
+                UserBadRequest("Начальная дата не может быть после конечной даты"),
+              ).asJson,
             ),
           )
         } yield ()
@@ -455,6 +493,32 @@ class NewsControllerSpec
         } yield ()
 
       }
+
+      "handel internal api error" in {
+        val mockService = mock[NewsService[IO]]
+
+        val backendStub: SttpBackend[IO, Any] =
+          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+            .whenServerEndpointRunLogic(NewsController.make[IO](mockService).getHeadlinesByCategory)
+            .backend()
+
+        when(mockService.getHeadlinesByCategory(Technology))
+          .thenReturn(IO(Some(errorAPIExample)))
+
+        val response = basicRequest
+          .get(uri"http://localhost:8080/api/v1/news-api/category/$Technology")
+          .send(backendStub)
+
+        for {
+          _ <- response.asserting(_.code shouldEqual InternalServerError)
+          _ <- response.asserting(_.body.isLeft shouldBe true)
+          _ <- response.asserting(
+            _.body shouldBe Left(
+              Left(ServerError(s"Ошибка на стороне внешнего сервиса")).asJson,
+            ),
+          )
+        } yield ()
+      }
     }
 
     "getHeadlinesByCountry" - {
@@ -506,6 +570,32 @@ class NewsControllerSpec
                     s" убедитесь, что запрос отправляемый на News.org правильный",
                 ),
               ).asJson,
+            ),
+          )
+        } yield ()
+      }
+
+      "handel internal api error" in {
+        val mockService = mock[NewsService[IO]]
+
+        val backendStub: SttpBackend[IO, Any] =
+          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+            .whenServerEndpointRunLogic(NewsController.make[IO](mockService).getHeadlinesByCountry)
+            .backend()
+
+        when(mockService.getHeadlinesByCountry(ru))
+          .thenReturn(IO(Some(errorAPIExample)))
+
+        val response = basicRequest
+          .get(uri"http://localhost:8080/api/v1/news-api/country/$ru")
+          .send(backendStub)
+
+        for {
+          _ <- response.asserting(_.code shouldEqual InternalServerError)
+          _ <- response.asserting(_.body.isLeft shouldBe true)
+          _ <- response.asserting(
+            _.body shouldBe Left(
+              Left(ServerError(s"Ошибка на стороне внешнего сервиса")).asJson,
             ),
           )
         } yield ()

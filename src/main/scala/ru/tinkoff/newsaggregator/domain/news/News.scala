@@ -1,6 +1,7 @@
 package ru.tinkoff.newsaggregator.domain.news
 
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
+import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
 
 import java.time.ZonedDateTime
 import java.util.UUID

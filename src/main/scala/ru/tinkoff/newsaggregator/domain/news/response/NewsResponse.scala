@@ -1,6 +1,7 @@
-package ru.tinkoff.newsaggregator.domain.news
+package ru.tinkoff.newsaggregator.domain.news.response
 
 import ru.tinkoff.newsaggregator.common.tethys.TethysInstances
+import ru.tinkoff.newsaggregator.domain.news.News
 import sttp.tapir.Schema
 import tethys.derivation.semiauto._
 import tethys.{JsonReader, JsonWriter}
@@ -19,7 +20,21 @@ case class NewsResponse(
     urlToImage: Option[String],
     publishedAt: ZonedDateTime,
     content: Option[String],
-)
+) {
+  def toNews: News =
+    News(
+      id,
+      source_id,
+      source_name,
+      author,
+      title,
+      description,
+      url,
+      urlToImage,
+      publishedAt,
+      content,
+    )
+}
 
 object NewsResponse extends TethysInstances {
   implicit val newsResponseReader: JsonReader[NewsResponse] = jsonReader
@@ -28,4 +43,7 @@ object NewsResponse extends TethysInstances {
 
   implicit val newsResponseSchema: Schema[NewsResponse] = Schema.derived
     .description("Новость")
+
+
+
 }

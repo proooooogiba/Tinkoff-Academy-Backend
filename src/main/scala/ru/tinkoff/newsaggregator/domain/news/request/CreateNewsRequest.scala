@@ -24,25 +24,7 @@ object CreateNewsRequest extends TethysInstances {
 
   implicit val createNewsRequestWriter: JsonWriter[CreateNewsRequest] = jsonWriter
 
-//  implicit val createNewsBodySerializerWriter: BodySerializer[CreateNewsRequest] =
-
   implicit val createNewsRequestSchema: Schema[CreateNewsRequest] = Schema.derived
     .description("Новость")
-
-  def toJsonString(request: CreateNewsRequest): String =
-    s"""
-       {
-        "source_id": "${request.source_id} ",
-        "source_name": "${request.source_name}",
-        "author": "${request.author}",
-        "title": "${request.title}",
-        "description": "${request.description}",
-        "url": "${request.url}",
-        "title": "${request.title}",
-        "urlToImage": "${request.description}",
-        "publishedAt": "${request.publishedAt}",
-        "content": "${request.content}"
-       }
-       """.stripMargin
 
 }

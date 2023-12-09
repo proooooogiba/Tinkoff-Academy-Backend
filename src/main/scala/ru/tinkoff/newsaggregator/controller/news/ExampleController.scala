@@ -1,4 +1,4 @@
-package ru.tinkoff.newsaggregator.controller
+package ru.tinkoff.newsaggregator.controller.news
 
 import cats.Applicative
 import ru.tinkoff.newsaggregator.common.controller.Controller

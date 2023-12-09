@@ -10,7 +10,7 @@ import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
 case class ServerError(what: String)
 
 sealed trait UserError
-case class BadRequest(what: String) extends UserError
+case class UserBadRequest(what: String) extends UserError
 case class ResourceNotFound(what: String) extends UserError
 
 object ControllerErrors {
@@ -21,6 +21,32 @@ object ControllerErrors {
         .description("Новость не найдена")
         .example(Right(ResourceNotFound("Новости по ключевому слову не были найдены"))),
     ) { case Right(ResourceNotFound(_)) =>
+      true
+    }
+
+  val notFoundByRangeUserError: EndpointOutput.OneOfVariant[Right[ServerError, ResourceNotFound]] =
+    oneOfVariantValueMatcher(
+      StatusCode.NotFound,
+      jsonBody[Right[ServerError, ResourceNotFound]]
+        .description("Новость не найдена")
+        .example(Right(ResourceNotFound("Новости в данном диапазоне не были найдены"))),
+    ) { case Right(ResourceNotFound(_)) =>
+      true
+    }
+
+  val badRequestByRangeUserError: EndpointOutput.OneOfVariant[Right[ServerError, UserBadRequest]] =
+    oneOfVariantValueMatcher(
+      StatusCode.BadRequest,
+      jsonBody[Right[ServerError, UserBadRequest]]
+        .description("Некорректный диапазон")
+        .example(
+          Right(
+            UserBadRequest(
+              "Введённый диапазон некорректен: начальная дата не может быть больше конечной",
+            ),
+          ),
+        ),
+    ) { case Right(UserBadRequest(_)) =>
       true
     }
 

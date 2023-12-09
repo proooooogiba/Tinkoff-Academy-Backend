@@ -1,7 +1,7 @@
 package ru.tinkoff.newsaggregator.utils
 
-import ru.tinkoff.newsaggregator.domain.news.NewsResponse
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
+import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -49,6 +49,25 @@ object TestData {
   )
 
   val testDeleteByIdExample: NewsResponse = NewsResponse(
+    newsId2,
+    Some("engadget"),
+    "Engadget",
+    Some("Mat Smith"),
+    "The Morning After: Google’s Gemini is the company’s answer to ChatGPT",
+    Some(
+      "Google officially introduced its most capable large language model to date, Gemini. CEO Sundar Pichai said it’s the first of “a new generation of AI models, inspired by the way people understand and interact with the world.” Of course, it’s all very complex, …",
+    ),
+    "https://www.engadget.com/the-morning-after-googles-gemini-is-the-companys-answer-to-chatgpt-121531424.html",
+    Some(
+      "https://s.yimg.com/os/creatr-uploaded-images/2023-12/0a0832d0-94f2-11ee-befb-57b42f3ce0d7",
+    ),
+    ZonedDateTime.parse("2023-12-07T12:15:31Z"),
+    Some(
+      "Google officially introduced its most capable large language model to date, Gemini. CEO Sundar Pichai said its the first of a new generation of AI models, inspired by the way people understand and in… [+4342 chars]",
+    ),
+  )
+
+  val testNotGetByKeyWordExample: NewsResponse = NewsResponse(
     newsId2,
     Some("engadget"),
     "Engadget",

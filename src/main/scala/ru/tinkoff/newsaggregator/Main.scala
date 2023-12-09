@@ -14,12 +14,12 @@ import ru.tinkoff.newsaggregator.api.commons.RetryUtilsImpl
 import ru.tinkoff.newsaggregator.api.client.http.HttpNewsClient
 import ru.tinkoff.newsaggregator.api.client.retrying.RetryingNewsClient
 import ru.tinkoff.newsaggregator.config.AppConfig
-import ru.tinkoff.newsaggregator.controller.news.NewsController
-import ru.tinkoff.newsaggregator.controller.{ExampleController, OrderController, PetController}
+import ru.tinkoff.newsaggregator.controller.news.{ExampleController, NewsController}
+import ru.tinkoff.newsaggregator.controller.{OrderController, PetController}
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
-import ru.tinkoff.newsaggregator.repository.postgresql.{NewsRepositoryPostgresql, OrderRepositoryPostgresql, PetsRepositoryPostgresql}
-import ru.tinkoff.newsaggregator.repository.{NewsRepository, OrderRepository, PetRepository}
+import ru.tinkoff.newsaggregator.repository.postgresql.NewsRepositoryPostgresql
+import ru.tinkoff.newsaggregator.repository.NewsRepository
 import ru.tinkoff.newsaggregator.service.{NewsService, OrderService, PetService}
 import sttp.client3.SttpBackend
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
@@ -45,8 +45,6 @@ object Main extends IOApp.Simple {
     val newsClient: RetryingNewsClient[IO] = new RetryingNewsClient[IO](client, retryUtils)
 
     makeTransactor[IO](conf.database).use { implicit xa: Transactor[IO] =>
-      val orderRepo: OrderRepository[IO] = new OrderRepositoryPostgresql[IO]
-      val petRepo: PetRepository[IO] = new PetsRepositoryPostgresql[IO]
       val newsRepo: NewsRepository[IO] = new NewsRepositoryPostgresql[IO]
 
       for {
@@ -54,9 +52,6 @@ object Main extends IOApp.Simple {
 
         endpoints <- IO.delay {
           List(
-            ExampleController.make[IO],
-            OrderController.make(OrderService.make(orderRepo)),
-            PetController.make(PetService.make(petRepo)),
             NewsController.make(NewsService.make(newsRepo, newsClient)),
           ).flatMap(_.endpoints)
         }

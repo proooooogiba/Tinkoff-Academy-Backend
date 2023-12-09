@@ -47,6 +47,12 @@ object NewsAPIResponseExample {
     ),
   )
 
+  val errorAPIExample: NewsAPIResponse = NewsAPIResponse(
+    "error",
+    0,
+    List(),
+  )
+
   val notFoundAPIExample: NewsAPIResponse = NewsAPIResponse(
     status = "ok",
     totalResults = 0,

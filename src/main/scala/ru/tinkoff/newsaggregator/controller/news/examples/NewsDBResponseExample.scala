@@ -1,7 +1,6 @@
 package ru.tinkoff.newsaggregator.controller.news.examples
 
-import ru.tinkoff.newsaggregator.domain.news.NewsResponse
-
+import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
 import java.time.ZonedDateTime
 import java.util.UUID
 

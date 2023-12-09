@@ -4,16 +4,13 @@ import cats.Applicative
 import cats.implicits.toFunctorOps
 import ru.tinkoff.newsaggregator.common.controller.Controller
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
-import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{
-  creationRequestExample,
-  newsResponseExample,
-}
+import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{creationRequestExample, newsResponseExample}
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.okAPIExample
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsDBResponseExample.okDBExample
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory.Science
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
 import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
-import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry, NewsResponse}
+import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry}
 import ru.tinkoff.newsaggregator.service.NewsService
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.model.StatusCode.{NotFound, Ok}
@@ -279,29 +276,40 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
         ),
       )
       .errorOut(
-        statusCode(NotFound).and(
-          jsonBody[ResourceNotFound]
-            .description("Новости в данном диапазоне не были найдены")
-            .example(resourceNotFoundError),
+        oneOf[Either[ServerError, UserError]](
+          notFoundByRangeUserError,
+          badRequestByRangeUserError,
         ),
       )
       .serverLogic { tupleDate =>
-        newsService
-          .listByDate(
-            tupleDate._1.atStartOfDay(ZoneId.systemDefault()),
-            tupleDate._2.atStartOfDay(ZoneId.systemDefault()),
+        if (tupleDate._1.isAfter(tupleDate._2)) {
+          Applicative[F].pure(
+            Left(
+              Right(
+                UserBadRequest("Начальная дата не может быть после конечной даты"),
+              ),
+            ),
           )
-          .map { list =>
-            if (list.isEmpty) {
-              Left(
-                ResourceNotFound(
-                  "Сохранённые новости в данном диапазоне не найдены",
-                ),
-              )
-            } else {
-              Right(list)
+        } else {
+          newsService
+            .listByDate(
+              tupleDate._1.atStartOfDay(ZoneId.systemDefault()),
+              tupleDate._2.atStartOfDay(ZoneId.systemDefault()),
+            )
+            .map { list =>
+              if (list.isEmpty) {
+                Left(
+                  Right(
+                    ResourceNotFound(
+                      "Сохранённые новости в данном диапазоне не найдены",
+                    ),
+                  ),
+                )
+              } else {
+                Right(list)
+              }
             }
-          }
+        }
       }
 
   override val endpoints: List[ServerEndpoint[Any, F]] =
