@@ -90,6 +90,7 @@ lazy val root = (project in file("."))
       "com.softwaremill.macwire" %% "util" % wireVersion % Test,
       "com.softwaremill.macwire" %% "proxy" % wireVersion % Test,
       "org.scalatestplus" %% "mockito-4-11" % mockitoVersion % Test,
+      "org.typelevel" %% "cats-effect-testing-scalatest" % ceTestingVersion % Test,
 
       // integration test
       "org.typelevel" %% "cats-effect-testing-scalatest" % ceTestingVersion % IntegrationTest,

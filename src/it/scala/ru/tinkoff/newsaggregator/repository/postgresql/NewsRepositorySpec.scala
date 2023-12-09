@@ -17,7 +17,7 @@ import ru.tinkoff.newsaggregator.config.PostgresConfig
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
 import ru.tinkoff.newsaggregator.domain.news.News
-import ru.tinkoff.newsaggregator.utils.TestData.{
+import ru.tinkoff.newsaggregator.repository.postgresql.utils.TestData.{
   creationRequest,
   testGetByKeyWordExample,
   testNotGetByKeyWordExample,

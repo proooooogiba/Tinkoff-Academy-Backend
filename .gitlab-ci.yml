@@ -14,7 +14,7 @@ build:
 test:
   stage: test
   script:
-    - sbt coverage test coverageReport
+    - sbt coverage test IntegrationTest/test coverageReport
   artifacts:
     reports:
       coverage_report:
