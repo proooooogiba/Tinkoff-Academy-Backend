@@ -43,7 +43,4 @@ object NewsResponse extends TethysInstances {
 
   implicit val newsResponseSchema: Schema[NewsResponse] = Schema.derived
     .description("Новость")
-
-
-
 }

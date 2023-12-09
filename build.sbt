@@ -25,6 +25,7 @@ val catsLoggingVersion = "2.6.0"
 val ficusVersion = "1.5.2"
 val circeVersion = "0.14.5"
 val wireVersion = "2.5.8"
+val mockitoVersion = "3.2.17.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -86,9 +87,9 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
       "org.scalamock" %% "scalamock" % scalamockVersion % Test,
       "com.softwaremill.macwire" %% "macros" % wireVersion % Provided,
-      "com.softwaremill.macwire" %% "util" % wireVersion,
-      "com.softwaremill.macwire" %% "proxy" % wireVersion,
-      "org.scalatestplus" %% "mockito-4-11" % "3.2.17.0" % Test,
+      "com.softwaremill.macwire" %% "util" % wireVersion % Test,
+      "com.softwaremill.macwire" %% "proxy" % wireVersion % Test,
+      "org.scalatestplus" %% "mockito-4-11" % mockitoVersion % Test,
 
       // integration test
       "org.typelevel" %% "cats-effect-testing-scalatest" % ceTestingVersion % IntegrationTest,

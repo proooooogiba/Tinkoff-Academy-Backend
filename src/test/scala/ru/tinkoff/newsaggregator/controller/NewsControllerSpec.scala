@@ -9,6 +9,7 @@ import org.scalatest.EitherValues
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
+import ru.tinkoff.newsaggregator.controller.news.NewsController
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors.{
   resourceNotFoundByKeyWord,
   resourceNotFoundDel,
@@ -20,8 +21,7 @@ import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample
   notFoundAPIExample,
   okAPIExample,
 }
-import ru.tinkoff.newsaggregator.controller.news.{
-  NewsController,
+import ru.tinkoff.newsaggregator.controller.news.ControllerErrors.{
   ResourceNotFound,
   ServerError,
   UserBadRequest,
@@ -45,10 +45,10 @@ import scala.language.postfixOps
 
 class NewsControllerSpec
     extends AsyncFreeSpec
+    with AsyncIOSpec
     with EitherValues
     with Matchers
-    with MockitoSugar
-    with AsyncIOSpec {
+    with MockitoSugar {
   "db" - {
     "save" - {
       "return correct response" in {
@@ -390,8 +390,6 @@ class NewsControllerSpec
         val response = basicRequest
           .get(uri"http://localhost:8080/api/v1/news-api/keyWord/$keyWord")
           .send(backendStub)
-
-        println(response.unsafeRunSync())
 
         for {
           _ <- response.asserting(_.code shouldEqual NotFound)

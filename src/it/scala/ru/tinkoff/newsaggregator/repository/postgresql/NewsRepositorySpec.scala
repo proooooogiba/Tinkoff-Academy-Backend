@@ -69,6 +69,23 @@ class NewsRepositorySpec
     } yield ()
   }
 
+  it should "list all" in { implicit t =>
+    val repo = new NewsRepositoryPostgresql[IO]
+    val news = testGetByKeyWordExample.toNews
+    val another_news = testNotGetByKeyWordExample.toNews
+
+    for {
+      _ <- repo.list.asserting(_ shouldBe List.empty)
+      _ <- repo.create(news).asserting(_ shouldBe 1)
+      _ <- repo.create(another_news).asserting(_ shouldBe 1)
+      _ <- repo.list.asserting(_ shouldBe List(news, another_news))
+      _ <- repo.delete(news.id).asserting(_ shouldBe Some(news))
+      _ <- repo.list.asserting(_ shouldBe List(another_news))
+      _ <- repo.delete(another_news.id).asserting(_ shouldBe Some(another_news))
+      _ <- repo.list.asserting(_ shouldBe List.empty)
+    } yield ()
+  }
+
   it should "get by keyWord" in { implicit t =>
     val repo = new NewsRepositoryPostgresql[IO]
     val news = testGetByKeyWordExample.toNews

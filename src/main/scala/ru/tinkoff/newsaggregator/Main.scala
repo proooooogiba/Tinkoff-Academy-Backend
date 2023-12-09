@@ -10,17 +10,16 @@ import org.http4s.server.Router
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
-import ru.tinkoff.newsaggregator.api.commons.RetryUtilsImpl
 import ru.tinkoff.newsaggregator.api.client.http.HttpNewsClient
 import ru.tinkoff.newsaggregator.api.client.retrying.RetryingNewsClient
+import ru.tinkoff.newsaggregator.api.commons.RetryUtilsImpl
 import ru.tinkoff.newsaggregator.config.AppConfig
-import ru.tinkoff.newsaggregator.controller.news.{ExampleController, NewsController}
-import ru.tinkoff.newsaggregator.controller.{OrderController, PetController}
+import ru.tinkoff.newsaggregator.controller.news.NewsController
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
-import ru.tinkoff.newsaggregator.repository.postgresql.NewsRepositoryPostgresql
 import ru.tinkoff.newsaggregator.repository.NewsRepository
-import ru.tinkoff.newsaggregator.service.{NewsService, OrderService, PetService}
+import ru.tinkoff.newsaggregator.repository.postgresql.NewsRepositoryPostgresql
+import ru.tinkoff.newsaggregator.service.NewsService
 import sttp.client3.SttpBackend
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter

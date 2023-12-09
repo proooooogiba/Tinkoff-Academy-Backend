@@ -7,13 +7,12 @@ import sttp.tapir.{EndpointOutput, oneOfVariantValueMatcher}
 import tethys.JsonObjectWriter.lowPriorityWriter
 import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
 
-case class ServerError(what: String)
-
-sealed trait UserError
-case class UserBadRequest(what: String) extends UserError
-case class ResourceNotFound(what: String) extends UserError
-
 object ControllerErrors {
+  case class ServerError(what: String)
+  sealed trait UserError
+  case class UserBadRequest(what: String) extends UserError
+  case class ResourceNotFound(what: String) extends UserError
+
   val notFoundUserError: EndpointOutput.OneOfVariant[Right[ServerError, ResourceNotFound]] =
     oneOfVariantValueMatcher(
       StatusCode.NotFound,

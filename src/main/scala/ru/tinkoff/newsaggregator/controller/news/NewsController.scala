@@ -4,12 +4,16 @@ import cats.Applicative
 import cats.implicits.toFunctorOps
 import ru.tinkoff.newsaggregator.common.controller.Controller
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
-import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{creationRequestExample, newsResponseExample}
+import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{
+  creationRequestExample,
+  newsResponseExample,
+}
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.okAPIExample
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsDBResponseExample.okDBExample
-import ru.tinkoff.newsaggregator.domain.news.NewsCategory.Science
+import ru.tinkoff.newsaggregator.domain.news.NewsCategory._
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
 import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
+import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
 import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry}
 import ru.tinkoff.newsaggregator.service.NewsService
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
