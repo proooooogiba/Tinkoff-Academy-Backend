@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  wiremock:
+    image: "wiremock/wiremock:latest"
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: ../../mappings/news
+        target: /home/wiremock/mappings

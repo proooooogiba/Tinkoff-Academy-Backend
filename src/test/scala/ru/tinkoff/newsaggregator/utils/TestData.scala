@@ -121,4 +121,13 @@ object TestData {
       "Malte Mueller/Getty Images\r\n<ul>\n<li>This post originally appeared in the Insider Today newsletter.</li>\n<li>You can sign up for Insider's daily newsletter here.</li>\n</ul>Happy Friday! A bit of insp… [+7494 chars]",
     ),
   )
+
+  val newsResponseString: String =
+    s"""
+       |{
+       | "status": "ok",
+       | "totalResults": "${0}",
+       | "articles": []
+       |}
+       |""".stripMargin
 }
