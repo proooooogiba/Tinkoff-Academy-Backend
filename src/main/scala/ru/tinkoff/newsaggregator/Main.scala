@@ -17,9 +17,12 @@ import ru.tinkoff.newsaggregator.config.AppConfig
 import ru.tinkoff.newsaggregator.controller.news.NewsController
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
-import ru.tinkoff.newsaggregator.repository.NewsRepository
-import ru.tinkoff.newsaggregator.repository.postgresql.NewsRepositoryPostgresql
-import ru.tinkoff.newsaggregator.service.NewsService
+import ru.tinkoff.newsaggregator.repository.{NewsRepository, UserRepository}
+import ru.tinkoff.newsaggregator.repository.postgresql.{
+  NewsRepositoryPostgresql,
+  UserRepositoryPostgresql,
+}
+import ru.tinkoff.newsaggregator.service.{NewsService, UserService}
 import sttp.client3.SttpBackend
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.tapir.server.http4s.Http4sServerInterpreter
@@ -45,13 +48,14 @@ object Main extends IOApp.Simple {
 
     makeTransactor[IO](conf.database).use { implicit xa: Transactor[IO] =>
       val newsRepo: NewsRepository[IO] = new NewsRepositoryPostgresql[IO]
+      val userRepo: UserRepository[IO] = new UserRepositoryPostgresql[IO]
 
       for {
         _ <- FlywayMigration.migrate[IO](conf.database)
 
         endpoints <- IO.delay {
           List(
-            NewsController.make(NewsService.make(newsRepo, newsClient)),
+            NewsController.make(NewsService.make(newsRepo, newsClient), UserService.make(userRepo)),
           ).flatMap(_.endpoints)
         }
 

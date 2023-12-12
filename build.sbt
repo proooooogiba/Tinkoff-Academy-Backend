@@ -29,6 +29,7 @@ val mockitoVersion = "3.2.17.0"
 val oauthVersion = "10.7"
 val jwtHttp4sVersion = "1.2.0"
 val jwtScalaVersion = "9.3.0"
+val jbCryptVersion = "0.4"
 
 lazy val root = (project in file("."))
   .settings(
@@ -48,8 +49,8 @@ lazy val root = (project in file("."))
 
       // jwt
       "dev.profunktor" %% "http4s-jwt-auth" % jwtHttp4sVersion,
-      "com.github.jwt-scala"    %% "jwt-core"            % jwtScalaVersion,
-      "com.github.jwt-scala"    %% "jwt-circe"           % jwtScalaVersion,
+      "com.github.jwt-scala" %% "jwt-core" % jwtScalaVersion,
+      "com.github.jwt-scala" %% "jwt-circe" % jwtScalaVersion,
 
       // logback
       "ch.qos.logback" % "logback-classic" % logbackVersion,
@@ -64,6 +65,9 @@ lazy val root = (project in file("."))
 
       // ficus
       "com.iheart" %% "ficus" % ficusVersion,
+
+      //bcrypt
+      "org.mindrot" % "jbcrypt" % jbCryptVersion,
 
       // tethys
       "com.tethys-json" %% "tethys-core" % tethysVersion,

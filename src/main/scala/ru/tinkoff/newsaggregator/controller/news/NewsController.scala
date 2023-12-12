@@ -14,7 +14,7 @@ import ru.tinkoff.newsaggregator.domain.news.NewsCategory._
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
 import ru.tinkoff.newsaggregator.domain.news.response.{NewsAPIResponse, NewsResponse}
 import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry}
-import ru.tinkoff.newsaggregator.service.NewsService
+import ru.tinkoff.newsaggregator.service.{NewsService, UserService}
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.model.StatusCode.{NotFound, Ok}
 import sttp.model.headers.WWWAuthenticateChallenge
@@ -29,7 +29,8 @@ import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
 import java.time.{LocalDate, ZoneId}
 import java.util.UUID
 
-class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Controller[F] {
+class NewsController[F[_]: Applicative](newsService: NewsService[F], userService: UserService[F])
+    extends Controller[F] {
 
   val getNewsByKeyWord: ServerEndpoint[Any, F] =
     endpoint.get
@@ -40,7 +41,7 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
             .description("Ключевое слово")
             .example("Scala"),
       )
-//      .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
+      .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
       .out(
         statusCode(Ok).and(
           jsonBody[NewsAPIResponse]
@@ -55,28 +56,29 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
           authorizationFail,
         ),
       )
-      .serverLogic { keyWord =>
-//        val keyWord = args._1
-//        val usernamePassword = args._2
-//        usernamePassword match {
-//          case None => authorizationFail
-//          case Some(usernamePassword: UsernamePassword) =>
-//            userService.in(usernamePassword.username, usernamePassword.password)
-//        }
+      .serverLogic { args =>
+        val keyWord = args._1
+        val usernamePassword = args._2.getOrElse(UsernamePassword("", None))
 
-        newsService
-          .getByKeyWord(keyWord)
-          .map {
-            case Some(news) =>
-              if (news.status == "error") {
-                errorOfExternalService
-              } else if (news.totalResults == 0)
-                Left(
-                  Right(ResourceNotFound(s"Новости по ключевому слову $keyWord не были найдены")),
-                )
-              else Right(news)
-            case None => errorToConnectExternalService
-          }
+        if (userService.isExist(usernamePassword)) {
+          newsService
+            .getByKeyWord(keyWord)
+            .map {
+              case Some(news) =>
+                if (news.status == "error") {
+                  errorOfExternalService
+                } else if (news.totalResults == 0)
+                  Left(
+                    Right(
+                      ResourceNotFound(s"Новости по ключевому слову $keyWord не были найдены"),
+                    ),
+                  )
+                else Right(news)
+              case None => errorToConnectExternalService
+            }
+        } else {
+          Applicative[F].pure(Left(Right(AuthorizationFail("Проблема авторизации"))))
+        }
       }
 
   val getHeadlinesByCategory: ServerEndpoint[Any, F] =
@@ -343,6 +345,9 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
 }
 
 object NewsController {
-  def make[F[_]: Applicative](newsService: NewsService[F]): NewsController[F] =
-    new NewsController[F](newsService)
+  def make[F[_]: Applicative](
+      newsService: NewsService[F],
+      userService: UserService[F],
+  ): NewsController[F] =
+    new NewsController[F](newsService, userService)
 }

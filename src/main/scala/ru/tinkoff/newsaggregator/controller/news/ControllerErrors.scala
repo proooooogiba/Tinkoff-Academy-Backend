@@ -26,7 +26,7 @@ object ControllerErrors {
 
   val authorizationFail: EndpointOutput.OneOfVariant[Right[ServerError, AuthorizationFail]] =
     oneOfVariantValueMatcher(
-      StatusCode.NotFound,
+      StatusCode.Unauthorized,
       jsonBody[Right[ServerError, AuthorizationFail]]
         .description("Проблема аутентификации")
         .example(Right(AuthorizationFail("Неверное имя пользователя или пароль"))),
