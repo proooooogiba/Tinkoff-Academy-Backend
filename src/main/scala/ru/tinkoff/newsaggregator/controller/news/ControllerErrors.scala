@@ -12,6 +12,7 @@ object ControllerErrors {
   sealed trait UserError
   case class UserBadRequest(what: String) extends UserError
   case class ResourceNotFound(what: String) extends UserError
+  case class AuthorizationFail(what: String) extends UserError
 
   val notFoundUserError: EndpointOutput.OneOfVariant[Right[ServerError, ResourceNotFound]] =
     oneOfVariantValueMatcher(
@@ -20,6 +21,16 @@ object ControllerErrors {
         .description("Новость не найдена")
         .example(Right(ResourceNotFound("Новости по ключевому слову не были найдены"))),
     ) { case Right(ResourceNotFound(_)) =>
+      true
+    }
+
+  val authorizationFail: EndpointOutput.OneOfVariant[Right[ServerError, AuthorizationFail]] =
+    oneOfVariantValueMatcher(
+      StatusCode.NotFound,
+      jsonBody[Right[ServerError, AuthorizationFail]]
+        .description("Проблема аутентификации")
+        .example(Right(AuthorizationFail("Неверное имя пользователя или пароль"))),
+    ) { case Right(AuthorizationFail(_)) =>
       true
     }
 

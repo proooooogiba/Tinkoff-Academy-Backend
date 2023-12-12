@@ -12,15 +12,16 @@ import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsDBResponseExample.okDBExample
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory._
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
-import ru.tinkoff.newsaggregator.domain.news.response.NewsAPIResponse
-import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
+import ru.tinkoff.newsaggregator.domain.news.response.{NewsAPIResponse, NewsResponse}
 import ru.tinkoff.newsaggregator.domain.news.{NewsCategory, NewsCountry}
 import ru.tinkoff.newsaggregator.service.NewsService
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.model.StatusCode.{NotFound, Ok}
+import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir._
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.tethysjson.jsonBody
+import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.ServerEndpoint
 import tethys.JsonObjectWriter.lowPriorityWriter
 import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
@@ -39,6 +40,7 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
             .description("Ключевое слово")
             .example("Scala"),
       )
+//      .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
       .out(
         statusCode(Ok).and(
           jsonBody[NewsAPIResponse]
@@ -50,9 +52,18 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F]) extends Con
         oneOf[Either[ServerError, UserError]](
           notFoundUserError,
           internalServerError,
+          authorizationFail,
         ),
       )
       .serverLogic { keyWord =>
+//        val keyWord = args._1
+//        val usernamePassword = args._2
+//        usernamePassword match {
+//          case None => authorizationFail
+//          case Some(usernamePassword: UsernamePassword) =>
+//            userService.in(usernamePassword.username, usernamePassword.password)
+//        }
+
         newsService
           .getByKeyWord(keyWord)
           .map {

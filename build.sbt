@@ -26,6 +26,9 @@ val ficusVersion = "1.5.2"
 val circeVersion = "0.14.5"
 val wireVersion = "2.5.8"
 val mockitoVersion = "3.2.17.0"
+val oauthVersion = "10.7"
+val jwtHttp4sVersion = "1.2.0"
+val jwtScalaVersion = "9.3.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -41,6 +44,12 @@ lazy val root = (project in file("."))
 
       // http4s
       "org.http4s" %% "http4s-ember-server" % http4sVersion,
+      "org.http4s" %% "http4s-dsl" % http4sVersion,
+
+      // jwt
+      "dev.profunktor" %% "http4s-jwt-auth" % jwtHttp4sVersion,
+      "com.github.jwt-scala"    %% "jwt-core"            % jwtScalaVersion,
+      "com.github.jwt-scala"    %% "jwt-circe"           % jwtScalaVersion,
 
       // logback
       "ch.qos.logback" % "logback-classic" % logbackVersion,
@@ -82,6 +91,9 @@ lazy val root = (project in file("."))
       // flyway
       "org.flywaydb" % "flyway-core" % flywayVersion,
 
+      // oauth2-oidc-sdk
+      "com.nimbusds" % "oauth2-oidc-sdk" % oauthVersion,
+
       // test
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
@@ -102,9 +114,19 @@ lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging)
   .configs(IntegrationTest)
   .settings(
+    scoverageSettings,
+  )
+  .settings(
     Defaults.itSettings,
     IntegrationTest / fork := true,
   )
   .settings(
     Compile / run / fork := true,
+  )
+
+lazy val scoverageSettings =
+  Seq(
+    coverageMinimumStmtTotal := 60,
+    coverageFailOnMinimum := false,
+    coverageHighlighting := true,
   )

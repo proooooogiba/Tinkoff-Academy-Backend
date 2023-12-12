@@ -12,7 +12,7 @@ class RetryingNewsClient[F[_]: MonadThrow: Sleep](
     retryUtils: RetryUtils[F],
 ) extends NewsClient[F] {
 
-  def retryingWrapper(method: F[Option[NewsAPIResponse]]): F[Option[NewsAPIResponse]] =
+  def retryingWrapper(method: => F[Option[NewsAPIResponse]]): F[Option[NewsAPIResponse]] =
     retryingOnSomeErrors[Option[NewsAPIResponse]](
       isWorthRetrying = retryUtils.isTimeoutException,
       policy = retryUtils.policy,

@@ -20,6 +20,8 @@ import ru.tinkoff.newsaggregator.wirings.DefaultWirings
 import sttp.client3.SttpBackend
 
 import java.io.File
+import java.util.concurrent.{TimeUnit, TimeoutException}
+import scala.concurrent.duration.Duration
 
 class RetryingOrderClientSpec
     extends AsyncFreeSpec
@@ -29,7 +31,7 @@ class RetryingOrderClientSpec
     with TestContainerForAll {
 
   override val containerDef: ContainerDef = DockerComposeContainer.Def(
-    new File("src/test/resources/news/docker-compose.yml"),
+    new File("src/it/resources/news/docker-compose.yml"),
     tailChildContainers = true,
     exposedServices = Seq(
       ExposedService("wiremock", 8080, Wait.forListeningPort()),
@@ -70,6 +72,17 @@ class RetryingOrderClientSpec
     }
   }
 
+//  Тест не проходит
+  "TimeOutException" - {
+    "get timeout exception" in {
+      val country = cz
+      def newsAPITimeoutMethod: IO[Option[NewsAPIResponse]] =
+        service.getHeadlinesByCountry(cz).andWait(Duration(2, TimeUnit.SECONDS))
+
+      val result = service.retryingWrapper(newsAPITimeoutMethod)
+      result.assertThrows[TimeoutException]
+    }
+  }
 }
 
 trait NewsServiceImplSpecUtils extends DefaultWirings {

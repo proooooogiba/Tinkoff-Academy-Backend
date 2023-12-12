@@ -1,7 +1,7 @@
 package ru.tinkoff.newsaggregator.controller
 
 import _root_.ru.tinkoff.newsaggregator.service.NewsService
-import _root_.ru.tinkoff.newsaggregator.utils.TestData._
+import _root_.ru.tinkoff.newsaggregator.utils.IntegrationTestData._
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import org.mockito.Mockito.when

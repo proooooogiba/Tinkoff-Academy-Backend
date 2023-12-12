@@ -19,7 +19,7 @@ import tethys.jackson.jacksonTokenWriterProducer
 
 trait DefaultWirings extends TestUtils {
   val config: AppConfig =
-    ConfigSource.file("src/test/resources/reference.conf").loadOrThrow[AppConfig]
+    ConfigSource.file("src/it/resources/reference.conf").loadOrThrow[AppConfig]
   val newsClientConfiguration: NewsClientConfiguration = config.api
   val retryConfiguration: RetryConfiguration = config.retry
   val sttpBackend: SttpBackend[IO, Any] = AsyncHttpClientCatsBackend

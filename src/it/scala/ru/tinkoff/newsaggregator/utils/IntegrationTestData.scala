@@ -1,4 +1,4 @@
-package ru.tinkoff.newsaggregator.repository.postgresql.utils
+package ru.tinkoff.newsaggregator.utils
 
 import ru.tinkoff.newsaggregator.domain.news.request.CreateNewsRequest
 import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
@@ -6,7 +6,7 @@ import ru.tinkoff.newsaggregator.domain.news.response.NewsResponse
 import java.time.ZonedDateTime
 import java.util.UUID
 
-object TestData {
+object IntegrationTestData {
 
   val newsId: UUID = UUID.fromString("93e9c52a-6a88-11ee-8c99-0242ac120002")
 
