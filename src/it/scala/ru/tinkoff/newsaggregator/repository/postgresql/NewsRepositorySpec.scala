@@ -6,13 +6,22 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.Transactor
 import org.scalatest.flatspec.FixtureAsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.testcontainers.containers.wait.strategy.{LogMessageWaitStrategy, Wait, WaitAllStrategy, WaitStrategy}
+import org.testcontainers.containers.wait.strategy.{
+  LogMessageWaitStrategy,
+  Wait,
+  WaitAllStrategy,
+  WaitStrategy,
+}
 import org.testcontainers.utility.DockerImageName
 import ru.tinkoff.newsaggregator.config.PostgresConfig
 import ru.tinkoff.newsaggregator.database.FlywayMigration
 import ru.tinkoff.newsaggregator.database.transactor.makeTransactor
 import ru.tinkoff.newsaggregator.domain.news.News
-import ru.tinkoff.newsaggregator.utils.IntegrationTestData.{creationRequest, testGetByKeyWordExample, testNotGetByKeyWordExample}
+import ru.tinkoff.newsaggregator.utils.IntegrationTestData.{
+  creationRequest,
+  testGetByKeyWordExample,
+  testNotGetByKeyWordExample,
+}
 
 import java.time.{LocalDate, ZoneId}
 import java.util.UUID
