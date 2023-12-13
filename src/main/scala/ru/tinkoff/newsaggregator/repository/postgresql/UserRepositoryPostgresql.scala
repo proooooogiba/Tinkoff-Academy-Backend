@@ -13,11 +13,12 @@ class UserRepositoryPostgresql[F[_]: Applicative: MonadCancelThrow](implicit tr:
 
   private val ctx = new DoobieContext.Postgres(SnakeCase)
   import ctx.{SqlInfixInterpolator => _, _}
+
   override def isExists(name: String, password: String): F[Option[Boolean]] =
     (for {
       result <-
         sql"""
-             SELECT compare_password($name, $password);
+             SELECT (password = crypt($password, password)) from users WHERE name = $name;
              """
           .query[Boolean]
           .option

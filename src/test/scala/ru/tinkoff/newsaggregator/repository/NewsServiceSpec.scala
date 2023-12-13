@@ -14,7 +14,11 @@ import ru.tinkoff.newsaggregator.domain.news.News
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory.Science
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.{de, us}
 import ru.tinkoff.newsaggregator.service.NewsService
-import ru.tinkoff.newsaggregator.utils.IntegrationTestData.{creationRequest, newsId, testGetByIdExample}
+import ru.tinkoff.newsaggregator.utils.IntegrationTestData.{
+  creationRequest,
+  newsId,
+  testGetByIdExample,
+}
 
 import java.time.{LocalDate, ZoneId}
 import java.util.UUID
@@ -28,7 +32,6 @@ class NewsServiceSpec
   "news-api" - {
     "getByKeyWord" - {
       "return correct some news API Response" in {
-
         val mockNewsRepo = mock[NewsRepository[IO]]
         val mockNewsClient = mock[RetryingNewsClient[IO]]
 

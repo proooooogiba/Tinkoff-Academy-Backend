@@ -9,22 +9,12 @@ import org.scalatest.EitherValues
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
+import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
 import ru.tinkoff.newsaggregator.controller.news.NewsController
-import ru.tinkoff.newsaggregator.controller.news.ControllerErrors.{
-  resourceNotFoundByKeyWord,
-  resourceNotFoundDel,
-  resourceNotFoundError,
-  resourceNotFoundGet,
-}
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.{
   errorAPIExample,
   notFoundAPIExample,
   okAPIExample,
-}
-import ru.tinkoff.newsaggregator.controller.news.ControllerErrors.{
-  ResourceNotFound,
-  ServerError,
-  UserBadRequest,
 }
 import ru.tinkoff.newsaggregator.domain.news.News
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory.{Business, Technology}
@@ -32,13 +22,15 @@ import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{SttpBackend, UriContext, basicRequest}
 import sttp.model.StatusCode
-import sttp.model.StatusCode.{InternalServerError, NotFound, Ok}
+import sttp.model.StatusCode.{InternalServerError, NotFound, Ok, Unauthorized}
 import sttp.tapir.integ.cats.effect.CatsMonadError
+import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.stub.TapirStubInterpreter
 import tethys.JsonObjectWriter.lowPriorityWriter
 import tethys.JsonWriterOps
 import tethys.derivation.auto.jsonWriterMaterializer
 import tethys.jackson.jacksonTokenWriterProducer
+
 import java.time.{LocalDate, ZoneId}
 import scala.language.postfixOps
 
@@ -50,17 +42,17 @@ class NewsControllerSpec
     with MockitoSugar {
   "db" - {
     "save" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).createNews,
+          )
+          .backend()
+
       "return correct response" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).createNews,
-            )
-            .backend()
-
         val expectedResponse = News.fromCreateNews(newsId, creationRequest).toResponse
         when(mockService.create(creationRequest)).thenReturn(IO(expectedResponse))
 
@@ -78,17 +70,16 @@ class NewsControllerSpec
     }
 
     "getById" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getNewsById,
+          )
+          .backend()
       "return news with existing Id" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsById,
-            )
-            .backend()
-
         when(mockService.get(newsId)).thenReturn(IO(Some(testGetByIdExample)))
 
         val response = basicRequest
@@ -103,16 +94,6 @@ class NewsControllerSpec
       }
 
       "return none because Id doesn't exist" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsById,
-            )
-            .backend()
-
         when(mockService.get(newsId)).thenReturn(IO(None))
 
         val response = basicRequest
@@ -128,17 +109,16 @@ class NewsControllerSpec
     }
 
     "deleteById" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).deleteNews,
+          )
+          .backend()
       "delete news with existing Id" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).deleteNews,
-            )
-            .backend()
-
         when(mockService.delete(newsId2)).thenReturn(IO(Some(testDeleteByIdExample)))
 
         val response = basicRequest
@@ -153,16 +133,6 @@ class NewsControllerSpec
       }
 
       "return error because Id doesn't exist" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).deleteNews,
-            )
-            .backend()
-
         when(mockService.delete(newsId2)).thenReturn(IO(None))
 
         val response = basicRequest
@@ -178,17 +148,17 @@ class NewsControllerSpec
     }
 
     "all" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).allNews,
+          )
+          .backend()
+
       "return all existing news" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).allNews,
-            )
-            .backend()
-
         when(mockService.list).thenReturn(IO(testAllExample))
 
         val response = basicRequest
@@ -203,16 +173,6 @@ class NewsControllerSpec
       }
 
       "return error, because there isn't any existing news" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).allNews,
-            )
-            .backend()
-
         when(mockService.list).thenReturn(IO(List.empty))
 
         val response = basicRequest
@@ -228,17 +188,17 @@ class NewsControllerSpec
     }
 
     "getByKeyWord" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getByKeyWordFromDB,
+          )
+          .backend()
+
       "return news with key word from db" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getByKeyWordFromDB,
-            )
-            .backend()
-
         val keyWord = "Insider"
 
         when(mockService.getByKeyWordFromDB(keyWord))
@@ -256,16 +216,6 @@ class NewsControllerSpec
       }
 
       "return error, because there isn't any existing news" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getByKeyWordFromDB,
-            )
-            .backend()
-
         val keyWord = "Bitcoin"
 
         when(mockService.getByKeyWordFromDB(keyWord)).thenReturn(IO(List.empty))
@@ -283,22 +233,22 @@ class NewsControllerSpec
     }
 
     "getByPublishedRange" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getNewsByPublishedRange,
+          )
+          .backend()
+
       val start = LocalDate.parse("2023-11-10")
       val end = LocalDate.parse("2023-12-12")
       val zStart = start.atStartOfDay(ZoneId.systemDefault())
       val zEnd = end.atStartOfDay(ZoneId.systemDefault())
 
       "return news by date range from db" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByPublishedRange,
-            )
-            .backend()
-
         when(mockService.listByDate(zStart, zEnd))
           .thenReturn(IO(List(testGetByKeyWordExample)))
 
@@ -315,16 +265,6 @@ class NewsControllerSpec
       }
 
       "return error, because there isn't any news in data range" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByPublishedRange,
-            )
-            .backend()
-
         when(mockService.listByDate(zStart, zEnd)).thenReturn(IO(List.empty))
 
         val response = basicRequest
@@ -345,16 +285,6 @@ class NewsControllerSpec
       }
 
       "return error, because start date after end date" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByPublishedRange,
-            )
-            .backend()
-
         val start = LocalDate.parse("2023-12-15")
         val end = LocalDate.parse("2023-12-12")
 
@@ -379,23 +309,33 @@ class NewsControllerSpec
 
   "news-api" - {
     "getNewsByKeyWord" - {
+
+      val username = "Admin"
+      val password = "test"
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+      when(mockUserService.isExist(UsernamePassword(username, Some(password))))
+        .thenReturn(IO(true))
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getNewsByKeyWord,
+          )
+          .backend()
+
+      val credentials = s"$username:$password"
+      val base64Credentials =
+        java.util.Base64.getEncoder.encodeToString(credentials.getBytes("UTF-8"))
+      val authorizationHeader = s"Basic $base64Credentials"
+      val keyWord = "Insider"
+
       "return news with key word" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByKeyWord,
-            )
-            .backend()
-
-        val keyWord = "Insider"
-
         when(mockService.getByKeyWord(keyWord))
           .thenReturn(IO(Some(okAPIExample)))
 
         val response = basicRequest
+          .headers(Map("Authorization" -> authorizationHeader))
           .get(uri"http://localhost:8080/api/v1/news-api/keyWord/$keyWord")
           .send(backendStub)
 
@@ -407,22 +347,11 @@ class NewsControllerSpec
       }
 
       "return response with no results" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByKeyWord,
-            )
-            .backend()
-
-        val keyWord = "Insider"
-
         when(mockService.getByKeyWord(keyWord))
           .thenReturn(IO(Some(notFoundAPIExample)))
 
         val response = basicRequest
+          .headers(Map("Authorization" -> authorizationHeader))
           .get(uri"http://localhost:8080/api/v1/news-api/keyWord/$keyWord")
           .send(backendStub)
 
@@ -438,22 +367,11 @@ class NewsControllerSpec
       }
 
       "return error because of internal server error" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getNewsByKeyWord,
-            )
-            .backend()
-
-        val keyWord = "Insider"
-
         when(mockService.getByKeyWord(keyWord))
           .thenReturn(IO(None))
 
         val response = basicRequest
+          .headers(Map("Authorization" -> authorizationHeader))
           .get(uri"http://localhost:8080/api/v1/news-api/keyWord/$keyWord")
           .send(backendStub)
 
@@ -472,20 +390,43 @@ class NewsControllerSpec
           )
         } yield ()
       }
+
+      "fail authentication" in {
+        when(mockUserService.isExist(UsernamePassword(username, Some(password))))
+          .thenReturn(IO(false))
+
+        val response = basicRequest
+          .headers(Map("Authorization" -> authorizationHeader))
+          .get(uri"http://localhost:8080/api/v1/news-api/keyWord/$keyWord")
+          .send(backendStub)
+
+        for {
+          _ <- response.asserting(_.code shouldBe Unauthorized)
+          _ <- response.asserting(_.body.isLeft shouldBe true)
+          _ <- response.asserting(
+            _.body shouldBe Left(
+              Right(
+                AuthorizationFail(s"Проблема авторизации"),
+              ).asJson,
+            ),
+          )
+        } yield ()
+
+      }
     }
 
     "getHeadlinesByCategory" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getHeadlinesByCategory,
+          )
+          .backend()
+
       "return news by category" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCategory,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCategory(Business))
           .thenReturn(IO(Some(okAPIExample)))
 
@@ -502,16 +443,6 @@ class NewsControllerSpec
       }
 
       "handel internal server error" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCategory,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCategory(Technology))
           .thenReturn(IO(None))
 
@@ -537,16 +468,6 @@ class NewsControllerSpec
       }
 
       "handel internal api error" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCategory,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCategory(Technology))
           .thenReturn(IO(Some(errorAPIExample)))
 
@@ -567,17 +488,17 @@ class NewsControllerSpec
     }
 
     "getHeadlinesByCountry" - {
+      val mockService = mock[NewsService[IO]]
+      val mockUserService = mock[UserService[IO]]
+
+      val backendStub: SttpBackend[IO, Any] =
+        TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
+          .whenServerEndpointRunLogic(
+            NewsController.make[IO](mockService, mockUserService).getHeadlinesByCountry,
+          )
+          .backend()
+
       "return news by country" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCountry,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCountry(ru))
           .thenReturn(IO(Some(okAPIExample)))
 
@@ -593,16 +514,6 @@ class NewsControllerSpec
       }
 
       "handel internal server error" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCountry,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCountry(ru))
           .thenReturn(IO(None))
 
@@ -627,16 +538,6 @@ class NewsControllerSpec
       }
 
       "handel internal api error" in {
-        val mockService = mock[NewsService[IO]]
-        val mockUserService = mock[UserService[IO]]
-
-        val backendStub: SttpBackend[IO, Any] =
-          TapirStubInterpreter(SttpBackendStub(new CatsMonadError[IO]()))
-            .whenServerEndpointRunLogic(
-              NewsController.make[IO](mockService, mockUserService).getHeadlinesByCountry,
-            )
-            .backend()
-
         when(mockService.getHeadlinesByCountry(ru))
           .thenReturn(IO(Some(errorAPIExample)))
 

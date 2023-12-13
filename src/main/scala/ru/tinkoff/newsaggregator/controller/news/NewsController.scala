@@ -1,7 +1,7 @@
 package ru.tinkoff.newsaggregator.controller.news
 
-import cats.Applicative
-import cats.implicits.toFunctorOps
+import cats.implicits.{toFlatMapOps, toFunctorOps}
+import cats.{Applicative, Monad}
 import ru.tinkoff.newsaggregator.common.controller.Controller
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
 import ru.tinkoff.newsaggregator.controller.news.examples.CreateNewsRequestExample.{
@@ -29,8 +29,10 @@ import tethys.derivation.auto.{jsonReaderMaterializer, jsonWriterMaterializer}
 import java.time.{LocalDate, ZoneId}
 import java.util.UUID
 
-class NewsController[F[_]: Applicative](newsService: NewsService[F], userService: UserService[F])
-    extends Controller[F] {
+class NewsController[F[_]: Applicative: Monad](
+    newsService: NewsService[F],
+    userService: UserService[F],
+) extends Controller[F] {
 
   val getNewsByKeyWord: ServerEndpoint[Any, F] =
     endpoint.get
@@ -60,25 +62,24 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F], userService
         val keyWord = args._1
         val usernamePassword = args._2.getOrElse(UsernamePassword("", None))
 
-        if (userService.isExist(usernamePassword)) {
-          newsService
-            .getByKeyWord(keyWord)
-            .map {
+        userService.isExist(usernamePassword).flatMap {
+          case true =>
+            newsService.getByKeyWord(keyWord).map {
               case Some(news) =>
                 if (news.status == "error") {
                   errorOfExternalService
-                } else if (news.totalResults == 0)
+                } else if (news.totalResults == 0) {
                   Left(
-                    Right(
-                      ResourceNotFound(s"Новости по ключевому слову $keyWord не были найдены"),
-                    ),
+                    Right(ResourceNotFound(s"Новости по ключевому слову $keyWord не были найдены")),
                   )
-                else Right(news)
+                } else {
+                  Right(news)
+                }
               case None => errorToConnectExternalService
             }
-        } else {
-          Applicative[F].pure(Left(Right(AuthorizationFail("Проблема авторизации"))))
+          case false => Applicative[F].pure(Left(Right(AuthorizationFail("Проблема авторизации"))))
         }
+
       }
 
   val getHeadlinesByCategory: ServerEndpoint[Any, F] =
@@ -345,7 +346,7 @@ class NewsController[F[_]: Applicative](newsService: NewsService[F], userService
 }
 
 object NewsController {
-  def make[F[_]: Applicative](
+  def make[F[_]: Applicative: Monad](
       newsService: NewsService[F],
       userService: UserService[F],
   ): NewsController[F] =

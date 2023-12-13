@@ -57,7 +57,7 @@ class NewsRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[F
     } yield result)
       .transact(tr)
 
-  override def listByDate(start: ZonedDateTime, end: ZonedDateTime): F[List[News]] =
+  override def listByDate(start: ZonedDateTime, end: ZonedDateTime): F[List[News]] = {
     (for {
       result <-
         sql"""
@@ -69,5 +69,5 @@ class NewsRepositoryPostgresql[F[_]: MonadCancelThrow](implicit tr: Transactor[F
           .to[List]
     } yield result)
       .transact(tr)
-
+  }
 }
