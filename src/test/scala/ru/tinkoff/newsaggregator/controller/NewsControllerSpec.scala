@@ -1,7 +1,5 @@
 package ru.tinkoff.newsaggregator.controller
 
-import _root_.ru.tinkoff.newsaggregator.service.{NewsService, UserService}
-import _root_.ru.tinkoff.newsaggregator.utils.IntegrationTestData._
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import org.mockito.Mockito.when
@@ -9,6 +7,7 @@ import org.scalatest.EitherValues
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
+import ru.tinkoff.newsaggregator.service._
 import ru.tinkoff.newsaggregator.controller.news.ControllerErrors._
 import ru.tinkoff.newsaggregator.controller.news.NewsController
 import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample.{
@@ -16,6 +15,7 @@ import ru.tinkoff.newsaggregator.controller.news.examples.NewsAPIResponseExample
   notFoundAPIExample,
   okAPIExample,
 }
+import ru.tinkoff.newsaggregator.utils.TestData._
 import ru.tinkoff.newsaggregator.domain.news.News
 import ru.tinkoff.newsaggregator.domain.news.NewsCategory.{Business, Technology}
 import ru.tinkoff.newsaggregator.domain.news.NewsCountry.ru
